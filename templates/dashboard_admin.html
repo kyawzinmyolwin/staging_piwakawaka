@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin Dashboard | TiakiNet{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="text-success mb-0">
+        <i class="bi bi-speedometer2"></i> Admin Dashboard
+    </h2>
+    <span class="badge bg-danger fs-6">Admin</span>
+</div>
+
+<div class="alert alert-success">
+    Welcome back, <strong>{{ session.get('username') }}</strong>!
+</div>
+
+<h5 class="text-muted mt-3 mb-3">Data</h5>
+<div class="row g-4">
+    <div class="col-md-4">
+        <div class="card border-success h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-table text-success" style="font-size: 2rem;"></i>
+                <h5 class="card-title mt-2">Catch Records</h5>
+                <p class="card-text text-muted">Browse and filter all trap catch data.</p>
+                <a href="{{ url_for('catches') }}" class="btn btn-outline-success btn-sm">View</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card border-success h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-bar-chart-line text-success" style="font-size: 2rem;"></i>
+                <h5 class="card-title mt-2">Reports</h5>
+                <p class="card-text text-muted">View graphical summaries and statistics.</p>
+                <a href="#" class="btn btn-outline-success btn-sm">View</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<h5 class="text-muted mt-4 mb-3">Management</h5>
+<div class="row g-4">
+    <div class="col-md-4">
+        <div class="card border-danger h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-map text-danger" style="font-size: 2rem;"></i>
+                <h5 class="card-title mt-2">Lines &amp; Traps</h5>
+                <p class="card-text text-muted">Add, edit, or retire trap lines and traps.</p>
+                <a href="#" class="btn btn-outline-danger btn-sm">Manage</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card border-danger h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-person-lines-fill text-danger" style="font-size: 2rem;"></i>
+                <h5 class="card-title mt-2">Line Assignments</h5>
+                <p class="card-text text-muted">Assign or reassign operators to lines.</p>
+                <a href="{{ url_for('manage_line_assignments') }}" class="btn btn-outline-danger btn-sm">Manage</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card border-danger h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-people text-danger" style="font-size: 2rem;"></i>
+                <h5 class="card-title mt-2">Manage Users</h5>
+                <p class="card-text text-muted">View, activate/deactivate, and change user roles.</p>
+                <a href="#" class="btn btn-outline-danger btn-sm">Manage</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

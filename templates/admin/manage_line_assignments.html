@@ -1,0 +1,142 @@
+{% extends 'base.html' %}
+{% block title %}Manage Line Assignments{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h1 class="mb-4">Manage Line Assignments</h1>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-header">
+            Assign Operator to Line
+        </div>
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('assign_line_to_operator') }}">
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-5">
+                        <label for="line_id" class="form-label">Line</label>
+                        <select
+                            id="line_id"
+                            name="line_id"
+                            class="form-select {{ 'is-invalid' if assign_errors and assign_errors.get('line_id') }}"
+                        >
+                            <option value="">Select a line</option>
+                            {% for line in lines %}
+                                <option value="{{ line.id }}"
+                                    {% if assign_form and assign_form.get('line_id') == line.id|string %}selected{% endif %}>
+                                    {{ line.name }}{% if line.is_retired %} (Inactive){% endif %}
+                                </option>
+                            {% endfor %}
+                        </select>
+                        {% if assign_errors and assign_errors.get('line_id') %}
+                            <div class="invalid-feedback">
+                                {{ assign_errors.get('line_id') }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="col-md-5">
+                        <label for="operator_id" class="form-label">Operator</label>
+                        <select
+                            id="operator_id"
+                            name="operator_id"
+                            class="form-select {{ 'is-invalid' if assign_errors and assign_errors.get('operator_id') }}"
+                        >
+                            <option value="">Select an operator</option>
+                            {% for operator in operators %}
+                                <option value="{{ operator.id }}"
+                                    {% if assign_form and assign_form.get('operator_id') == operator.id|string %}selected{% endif %}>
+                                    {{ operator.first_name }} {{ operator.last_name }} ({{ operator.username }})
+                                    {% if not operator.is_active %} - Inactive{% endif %}
+                                </option>
+                            {% endfor %}
+                        </select>
+                        {% if assign_errors and assign_errors.get('operator_id') %}
+                            <div class="invalid-feedback">
+                                {{ assign_errors.get('operator_id') }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary w-100">Assign</button>
+                    </div>
+                </div>
+
+                {% if assign_errors and assign_errors.get('duplicate') %}
+                    <div class="text-danger mt-2">
+                        {{ assign_errors.get('duplicate') }}
+                    </div>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+
+    {% for line in grouped_lines.values() %}
+        <div class="card shadow-sm mb-3">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <div>
+                    <strong>{{ line.line_name }}</strong>
+                    <span class="text-muted">({{ line.line_type }})</span>
+                </div>
+                {% if line.is_retired %}
+                    <span class="badge bg-secondary">Inactive</span>
+                {% else %}
+                    <span class="badge bg-success">Active</span>
+                {% endif %}
+            </div>
+
+            <div class="card-body">
+                {% if line.operators %}
+                    <div class="list-group">
+                        {% for operator in line.operators %}
+                            <div class="list-group-item">
+                                <div class="row g-3 align-items-center">
+                                    <div class="col-md-5">
+                                        <div class="fw-semibold">
+                                            {{ operator.full_name }} ({{ operator.username }})
+                                        </div>
+                                        <div class="small text-muted">
+                                            Assigned on: {{ operator.assignment_date }}
+                                        </div>
+                                        {% if not operator.is_active %}
+                                            <span class="badge bg-warning text-dark mt-1">Inactive</span>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="col-md-7">
+                                        <form method="POST" action="{{ url_for('reassign_line_operator') }}">
+                                            <input type="hidden" name="line_id" value="{{ line.line_id }}">
+                                            <input type="hidden" name="old_operator_id" value="{{ operator.operator_id }}">
+
+                                            <div class="row g-2 align-items-center">
+                                                <div class="col-md-8">
+                                                    <select name="new_operator_id" class="form-select" required>
+                                                        <option value="">Select a new operator</option>
+                                                        {% for candidate in operators %}
+                                                            <option value="{{ candidate.id }}">
+                                                                {{ candidate.first_name }} {{ candidate.last_name }} ({{ candidate.username }})
+                                                                {% if not candidate.is_active %} - Inactive{% endif %}
+                                                            </option>
+                                                        {% endfor %}
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <button type="submit" class="btn btn-outline-primary w-100">
+                                                        Reassign
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted mb-0">No operators currently assigned to this line.</p>
+                {% endif %}
+            </div>
+        </div>
+    {% endfor %}
+</div>
+{% endblock %}

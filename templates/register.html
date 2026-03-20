@@ -1,0 +1,293 @@
+{% extends 'base.html' %}
+
+{% block title %}Register | TiakiNet{% endblock %}
+
+{% block content %}
+<div class="form-page">
+    <div class="form-card form-card-wide">
+
+        <!-- Header -->
+        <div class="text-center mb-4">
+            <div class="form-icon-wrap mb-3">
+                <i class="bi bi-person-plus"></i>
+            </div>
+            <h4 class="form-title">Register as Observer</h4>
+            <p class="text-muted mt-1" style="font-size:0.85rem;">
+                Predator trap monitoring to protect native wildlife.
+            </p>
+        </div>
+
+        <form method="POST" action="{{ url_for('register') }}" novalidate id="register-form">
+
+            <!-- Account details -->
+            <div class="form-section-label">Account Details</div>
+            <div class="row g-3">
+
+                <div class="col-md-6">
+                    <div class="form-field">
+                        <label for="username">Username <span class="text-danger">*</span></label>
+                        <input type="text" id="username" name="username"
+                               value="{{ form_data.get('username', '') }}"
+                               class="{{ 'is-invalid' if errors.get('username') }}"
+                               placeholder="choose a username" maxlength="50" autocomplete="username">
+                        {% if errors.get('username') %}
+                        <span class="field-error"><i class="bi bi-x-circle me-1"></i>{{ errors.username }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="form-field">
+                        <label for="email">Email Address <span class="text-danger">*</span></label>
+                        <input type="email" id="email" name="email"
+                               value="{{ form_data.get('email', '') }}"
+                               class="{{ 'is-invalid' if errors.get('email') }}"
+                               placeholder="you@example.com" maxlength="100" autocomplete="email">
+                        {% if errors.get('email') %}
+                        <span class="field-error"><i class="bi bi-x-circle me-1"></i>{{ errors.email }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Password with eye toggle + strength bar -->
+                <div class="col-md-6">
+                    <div class="form-field">
+                        <label for="password">Password <span class="text-danger">*</span></label>
+                        <div class="position-relative">
+                            <input type="password" id="password" name="password"
+                                   class="{{ 'is-invalid' if errors.get('password') }}"
+                                   placeholder="••••••••" autocomplete="new-password"
+                                   style="padding-right: 2.8rem;">
+                            <button type="button" tabindex="-1"
+                                    class="position-absolute top-50 end-0 translate-middle-y border-0 bg-transparent me-2 p-0"
+                                    style="color: var(--text-light); cursor:pointer; font-size:1.1rem; line-height:1;"
+                                    id="pw-toggle-1" aria-label="Show password">
+                                <i class="bi bi-eye-fill" id="pw-icon-1"></i>
+                            </button>
+                        </div>
+                        <!-- Strength bar -->
+                        <div class="mt-1" style="height:6px; background:#dde6dd; border-radius:3px; overflow:hidden;">
+                            <div id="pw-strength-fill"
+                                 style="height:100%; width:0%; border-radius:3px; transition: width .25s, background .25s;"></div>
+                        </div>
+                        <!-- Requirement checklist -->
+                        <ul class="pw-req-list" id="pw-req-list">
+                            <li id="req-len">8+ characters</li>
+                            <li id="req-upper">Uppercase</li>
+                            <li id="req-lower">Lowercase</li>
+                            <li id="req-num">Number</li>
+                        </ul>
+                        {% if errors.get('password') %}
+                        <span class="field-error"><i class="bi bi-x-circle me-1"></i>{{ errors.password }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Confirm password with eye toggle -->
+                <div class="col-md-6">
+                    <div class="form-field">
+                        <label for="confirm_password">Confirm Password <span class="text-danger">*</span></label>
+                        <div class="position-relative">
+                            <input type="password" id="confirm_password" name="confirm_password"
+                                   class="{{ 'is-invalid' if errors.get('confirm_password') }}"
+                                   placeholder="••••••••" autocomplete="new-password"
+                                   style="padding-right: 2.8rem;">
+                            <button type="button" tabindex="-1"
+                                    class="position-absolute top-50 end-0 translate-middle-y border-0 bg-transparent me-2 p-0"
+                                    style="color: var(--text-light); cursor:pointer; font-size:1.1rem; line-height:1;"
+                                    id="pw-toggle-2" aria-label="Show confirm password">
+                                <i class="bi bi-eye-fill" id="pw-icon-2"></i>
+                            </button>
+                        </div>
+                        {% if errors.get('confirm_password') %}
+                        <span class="field-error"><i class="bi bi-x-circle me-1"></i>{{ errors.confirm_password }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Personal details -->
+            <div class="form-section-label">Personal Details</div>
+            <div class="row g-3">
+
+                <div class="col-md-6">
+                    <div class="form-field">
+                        <label for="first_name">First Name <span class="text-danger">*</span></label>
+                        <input type="text" id="first_name" name="first_name"
+                               value="{{ form_data.get('first_name', '') }}"
+                               class="{{ 'is-invalid' if errors.get('first_name') }}"
+                               maxlength="50" autocomplete="given-name">
+                        {% if errors.get('first_name') %}
+                        <span class="field-error"><i class="bi bi-x-circle me-1"></i>{{ errors.first_name }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="form-field">
+                        <label for="last_name">Last Name <span class="text-danger">*</span></label>
+                        <input type="text" id="last_name" name="last_name"
+                               value="{{ form_data.get('last_name', '') }}"
+                               class="{{ 'is-invalid' if errors.get('last_name') }}"
+                               maxlength="50" autocomplete="family-name">
+                        {% if errors.get('last_name') %}
+                        <span class="field-error"><i class="bi bi-x-circle me-1"></i>{{ errors.last_name }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="form-field">
+                        <label for="phone">Phone <span class="field-optional">(optional)</span></label>
+                        <input type="text" id="phone" name="phone"
+                               value="{{ form_data.get('phone', '') }}"
+                               placeholder="+64 21 000 0000" maxlength="20" autocomplete="tel">
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Emergency contact -->
+            <div class="form-section-label">Emergency Contact <span class="field-optional">(optional)</span></div>
+            <div class="row g-3">
+
+                <div class="col-md-6">
+                    <div class="form-field">
+                        <label for="emergency_contact_name">Contact Name</label>
+                        <input type="text" id="emergency_contact_name" name="emergency_contact_name"
+                               value="{{ form_data.get('emergency_contact_name', '') }}"
+                               maxlength="100">
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="form-field">
+                        <label for="emergency_contact_phone">Contact Phone</label>
+                        <input type="text" id="emergency_contact_phone" name="emergency_contact_phone"
+                               value="{{ form_data.get('emergency_contact_phone', '') }}"
+                               maxlength="20">
+                    </div>
+                </div>
+
+            </div>
+
+            <button type="submit" class="form-btn mt-4">
+                Create Account <i class="bi bi-check-lg ms-1"></i>
+            </button>
+
+        </form>
+
+        <p class="form-footer-text">
+            Already have an account? <a href="{{ url_for('login') }}">Login here</a>
+        </p>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// ── Eye toggle ─────────────────────────────────────────────────────
+function setupToggle(inputId, btnId, iconId) {
+    document.getElementById(btnId).addEventListener('click', function () {
+        const input = document.getElementById(inputId);
+        const icon  = document.getElementById(iconId);
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.className = 'bi bi-eye-slash-fill';
+        } else {
+            input.type = 'password';
+            icon.className = 'bi bi-eye-fill';
+        }
+    });
+}
+setupToggle('password',         'pw-toggle-1', 'pw-icon-1');
+setupToggle('confirm_password', 'pw-toggle-2', 'pw-icon-2');
+
+// ── Strength bar + checklist ───────────────────────────────────────
+const pwInput = document.getElementById('password');
+const fill    = document.getElementById('pw-strength-fill');
+const STRENGTH_COLORS = ['', '#e53e3e', '#e07d3a', '#c9aa00', '#2d7a3a'];
+
+pwInput.addEventListener('input', function () {
+    const pw    = this.value;
+    const len   = pw.length >= 8;
+    const upper = /[A-Z]/.test(pw);
+    const lower = /[a-z]/.test(pw);
+    const num   = /\d/.test(pw);
+
+    document.getElementById('req-len').classList.toggle('met', len);
+    document.getElementById('req-upper').classList.toggle('met', upper);
+    document.getElementById('req-lower').classList.toggle('met', lower);
+    document.getElementById('req-num').classList.toggle('met', num);
+
+    const score = [len, upper, lower, num].filter(Boolean).length;
+    if (pw.length === 0) {
+        fill.style.width = '0%';
+        fill.style.background = '';
+    } else {
+        fill.style.width = (score * 25) + '%';
+        fill.style.background = STRENGTH_COLORS[score];
+    }
+});
+
+// ── Confirm password live match ────────────────────────────────────
+const confirmInput = document.getElementById('confirm_password');
+confirmInput.addEventListener('input', function () {
+    const fieldEl  = this.closest('.form-field');
+    const existing = fieldEl.querySelector('.field-error');
+    if (existing) existing.remove();
+    this.classList.remove('is-invalid', 'is-valid');
+    if (!this.value) return;
+    if (this.value !== pwInput.value) {
+        this.classList.add('is-invalid');
+        const err = document.createElement('span');
+        err.className = 'field-error';
+        err.innerHTML = '<i class="bi bi-x-circle me-1"></i>Passwords do not match.';
+        fieldEl.appendChild(err);
+    } else {
+        this.classList.add('is-valid');
+    }
+});
+
+// ── Blur: show green on valid required fields ──────────────────────
+['username', 'email', 'first_name', 'last_name'].forEach(id => {
+    const input = document.getElementById(id);
+    input.addEventListener('blur', function () {
+        if (!this.classList.contains('is-invalid') && this.value.trim()) {
+            this.classList.add('is-valid');
+        }
+    });
+    input.addEventListener('input', function () {
+        this.classList.remove('is-valid');
+    });
+});
+
+// ── Submit: block on empty required fields ─────────────────────────
+document.getElementById('register-form').addEventListener('submit', function (e) {
+    const required = ['username', 'email', 'password', 'confirm_password', 'first_name', 'last_name'];
+    let valid = true;
+    required.forEach(id => {
+        const input   = document.getElementById(id);
+        const fieldEl = input.closest('.form-field');
+        if (!input.value.trim()) {
+            input.classList.add('is-invalid');
+            if (!fieldEl.querySelector('.field-error')) {
+                const err = document.createElement('span');
+                err.className = 'field-error';
+                err.innerHTML = '<i class="bi bi-x-circle me-1"></i>This field is required.';
+                fieldEl.appendChild(err);
+            }
+            input.addEventListener('input', () => {
+                input.classList.remove('is-invalid');
+                const e2 = fieldEl.querySelector('.field-error');
+                if (e2) e2.remove();
+            }, { once: true });
+            valid = false;
+        }
+    });
+    if (!valid) e.preventDefault();
+});
+</script>
+{% endblock %}

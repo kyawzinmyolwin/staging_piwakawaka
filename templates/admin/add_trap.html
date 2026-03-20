@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+{% block title %}Add Trap{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="mb-1">Add Trap</h1>
+            <p class="text-muted mb-0">
+                Line: <strong>{{ line.name }}</strong>
+            </p>
+        </div>
+        <a href="{{ url_for('view_line_traps', line_id=line.id) }}" class="btn btn-outline-secondary">
+            Back
+        </a>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <form method="POST">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label for="code" class="form-label">Trap Code</label>
+                        <input
+                            type="text"
+                            id="code"
+                            name="code"
+                            class="form-control {{ 'is-invalid' if errors.get('code') }}"
+                            value="{{ form_data.get('code', '') }}"
+                        >
+                        {% if errors.get('code') %}
+                            <div class="invalid-feedback">
+                                {{ errors.get('code') }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="trap_type" class="form-label">Trap Type</label>
+                        <select
+                            id="trap_type"
+                            name="trap_type"
+                            class="form-select {{ 'is-invalid' if errors.get('trap_type') }}"
+                        >
+                            <option value="">Select trap type</option>
+                            {% for trap_type in trap_types %}
+                                <option value="{{ trap_type }}"
+                                    {% if form_data.get('trap_type') == trap_type %}selected{% endif %}>
+                                    {{ trap_type }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                        {% if errors.get('trap_type') %}
+                            <div class="invalid-feedback">
+                                {{ errors.get('trap_type') }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="latitude" class="form-label">Latitude</label>
+                        <input
+                            type="text"
+                            id="latitude"
+                            name="latitude"
+                            class="form-control {{ 'is-invalid' if errors.get('latitude') }}"
+                            value="{{ form_data.get('latitude', '') }}"
+                        >
+                        {% if errors.get('latitude') %}
+                            <div class="invalid-feedback">
+                                {{ errors.get('latitude') }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="longitude" class="form-label">Longitude</label>
+                        <input
+                            type="text"
+                            id="longitude"
+                            name="longitude"
+                            class="form-control {{ 'is-invalid' if errors.get('longitude') }}"
+                            value="{{ form_data.get('longitude', '') }}"
+                        >
+                        {% if errors.get('longitude') %}
+                            <div class="invalid-feedback">
+                                {{ errors.get('longitude') }}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-primary">Add Trap</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

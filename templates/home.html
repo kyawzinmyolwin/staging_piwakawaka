@@ -1,0 +1,153 @@
+{% extends 'base.html' %}
+
+{% block title %}Home | TiakiNet{% endblock %}
+
+{% block full_content %}
+
+<!-- ── Hero ──────────────────────────────────────────────────────── -->
+<section class="hero-section">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-7">
+                <div class="hero-eyebrow">Predator Free Lincoln University</div>
+                <h1 class="hero-title">Guard the land.<br>Track every trap.</h1>
+                <p class="hero-subtitle">
+                    Predator trap monitoring to protect native wildlife on the Lincoln University campus.
+                </p>
+                {% if not session.get('user_id') %}
+                <div class="hero-actions">
+                    <a href="{{ url_for('register') }}" class="btn btn-hero-primary">
+                        <i class="bi bi-person-plus me-1"></i> Register as Observer
+                    </a>
+                    <a href="{{ url_for('login') }}" class="btn btn-hero-outline">
+                        <i class="bi bi-box-arrow-in-right me-1"></i> Login
+                    </a>
+                </div>
+                {% else %}
+                <div class="hero-actions">
+                    <a href="{{ url_for('dashboard') }}" class="btn btn-hero-primary">
+                        <i class="bi bi-speedometer2 me-1"></i> Go to Dashboard
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+            <div class="col-lg-5 text-center mt-5 mt-lg-0">
+                <i class="bi bi-shield-fill hero-icon"></i>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ── About ─────────────────────────────────────────────────────── -->
+<section class="content-section">
+    <div class="container">
+
+        <div class="section-heading">About This Project</div>
+
+        <div class="row g-4 mb-5">
+            <div class="col-md-4">
+                <div class="info-card">
+                    <i class="bi bi-shield-check info-card-icon"></i>
+                    <h5>Our Mission</h5>
+                    <p>PF-LU aims to eliminate introduced predators from the Lincoln University campus, creating safe habitat for native birds and wildlife.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="info-card">
+                    <i class="bi bi-map info-card-icon"></i>
+                    <h5>Trap Lines</h5>
+                    <p>Multiple trap lines across campus, each consisting of various trap types — A24, DOC 150, DOC 200, Flipping Timmy, and more.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="info-card">
+                    <i class="bi bi-people info-card-icon"></i>
+                    <h5>Community Effort</h5>
+                    <p>Operators and Observers work together to monitor traps, record catches, and submit incidental observations of native wildlife.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- How it works -->
+        <div class="section-heading">How It Works</div>
+
+        <div class="row g-4 mb-5">
+            <div class="col-md-6">
+                <ol class="how-list">
+                    <li>
+                        <span class="how-num">1</span>
+                        <div>
+                            <strong>Register as an Observer</strong>
+                            <p>Create your account to start contributing to predator control efforts.</p>
+                        </div>
+                    </li>
+                    <li>
+                        <span class="how-num">2</span>
+                        <div>
+                            <strong>Get Assigned to a Trap Line</strong>
+                            <p>An Admin will assign you to one or more trap lines on campus.</p>
+                        </div>
+                    </li>
+                    <li>
+                        <span class="how-num">3</span>
+                        <div>
+                            <strong>Check Traps &amp; Record Results</strong>
+                            <p>Visit your assigned traps, record catches, rebaiting, and trap conditions.</p>
+                        </div>
+                    </li>
+                    <li>
+                        <span class="how-num">4</span>
+                        <div>
+                            <strong>Submit Incidental Observations</strong>
+                            <p>Report any wildlife sightings or unusual activity you encounter in the field.</p>
+                        </div>
+                    </li>
+                </ol>
+            </div>
+            <div class="col-md-6">
+                <div class="roles-card">
+                    <div class="roles-card-header">
+                        <i class="bi bi-person-badge me-2"></i>User Roles
+                    </div>
+                    <ul class="roles-list">
+                        <li>
+                            <span class="role-badge role-observer">Observer</span>
+                            View trap lines and submit observations
+                        </li>
+                        <li>
+                            <span class="role-badge role-operator">Operator</span>
+                            Check traps, record catches, manage assigned lines
+                        </li>
+                        <li>
+                            <span class="role-badge role-admin">Admin</span>
+                            Manage users, lines, traps, and all system data
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contact -->
+        <div class="section-heading">Contact</div>
+
+        <div class="row mb-5">
+            <div class="col-md-6">
+                <div class="info-card">
+                    <h5>Predator Free Lincoln University</h5>
+                    <p class="mb-1"><i class="bi bi-geo-alt me-2 text-muted"></i>Lincoln University, Ellesmere Junction Road, Lincoln 7647</p>
+                    <p class="mb-1"><i class="bi bi-envelope me-2 text-muted"></i>pflu@lincoln.ac.nz</p>
+                    <p class="mb-0"><i class="bi bi-telephone me-2 text-muted"></i>+64 3 423 0000</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Team -->
+        <div class="team-footer">
+            <p class="mb-0 fw-semibold">Development Team — Piwakawaka Group</p>
+            <p class="mb-0 text-muted small">COMP639 Studio Project 1, Lincoln University, 2026</p>
+        </div>
+
+    </div>
+</section>
+
+{% endblock %}
