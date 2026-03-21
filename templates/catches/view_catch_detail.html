@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+
+{% block title %}Trap Catch #{{ catch_record.id }} | PF-LU Trap Management{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="text-success mb-0"><i class="bi bi-clipboard2-pulse me-2"></i>Trap Catch #{{ catch_record.id }}</h2>
+    <div class="d-flex gap-2">
+        <a href="{{ url_for('view_catches') }}" class="btn btn-outline-secondary">Back to Records</a>
+        {% if can_edit %}
+        <a href="{{ url_for('edit_catch', catch_id=catch_record.id) }}" class="btn btn-success">Edit Record</a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="card border-success">
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-md-4"><strong>Trap:</strong> {{ catch_record.trap_code }}</div>
+            <div class="col-md-4"><strong>Date:</strong> {{ catch_record.date_checked.strftime('%Y-%m-%d %H:%M') }}</div>
+            <div class="col-md-4"><strong>Recorded By:</strong> {{ catch_record.recorded_by_username or 'Unknown' }}</div>
+            <div class="col-md-4"><strong>Species:</strong> {{ catch_record.species }}</div>
+            <div class="col-md-4"><strong>Sex:</strong> {{ catch_record.sex or '—' }}</div>
+            <div class="col-md-4"><strong>Maturity:</strong> {{ catch_record.maturity or '—' }}</div>
+            <div class="col-md-4"><strong>Status:</strong> {{ catch_record.status }}</div>
+            <div class="col-md-4"><strong>Rebaited:</strong> {{ 'Yes' if catch_record.rebaited else 'No' }}</div>
+            <div class="col-md-4"><strong>Bait Type:</strong> {{ catch_record.bait_type }}</div>
+            <div class="col-md-4"><strong>Condition:</strong> {{ catch_record.trap_condition }}</div>
+            <div class="col-md-4"><strong>Strikes:</strong> {{ catch_record.strikes }}</div>
+            <div class="col-12"><strong>Notes:</strong><br>{{ catch_record.notes or '—' }}</div>
+        </div>
+    </div>
+</div>
+{% endblock %}

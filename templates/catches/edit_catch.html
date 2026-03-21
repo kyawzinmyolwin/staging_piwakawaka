@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit Trap Catch #{{ catch_id }} | PF-LU Trap Management{% endblock %}
+
+{% block content %}
+<h2 class="text-success mb-4"><i class="bi bi-pencil-square me-2"></i>Edit Trap Catch #{{ catch_id }}</h2>
+
+<form method="post" novalidate>
+    <div class="row g-3">
+        <div class="col-md-6">
+            <label for="date_checked" class="form-label">Date Checked</label>
+            <input type="datetime-local" class="form-control {{ 'is-invalid' if errors.get('date_checked') }}" id="date_checked" name="date_checked" value="{{ form_data.get('date_checked', '') }}" min="{{ min_date }}" max="{{ max_date }}" required>
+            <div class="invalid-feedback">{{ errors.get('date_checked') }}</div>
+        </div>
+
+        <div class="col-md-6">
+            <label class="form-label">Trap ID</label>
+            <input type="text" class="form-control" value="{{ trap_id }}" disabled>
+        </div>
+
+        <div class="col-md-6">
+            <label for="species_id" class="form-label">Species Caught</label>
+            <select class="form-select {{ 'is-invalid' if errors.get('species_id') }}" id="species_id" name="species_id" required>
+                <option value="">Select species</option>
+                {% for option in species_options %}
+                <option value="{{ option.id }}" {% if form_data.get('species_id') == option.id|string %}selected{% endif %}>{{ option.name }}</option>
+                {% endfor %}
+            </select>
+            <div class="invalid-feedback">{{ errors.get('species_id') }}</div>
+        </div>
+
+        <div class="col-md-6">
+            <label for="sex" class="form-label">Sex</label>
+            <select class="form-select {{ 'is-invalid' if errors.get('sex') }}" id="sex" name="sex">
+                <option value="">Unspecified</option>
+                {% for option in sex_options %}
+                <option value="{{ option }}" {% if form_data.get('sex') == option %}selected{% endif %}>{{ option }}</option>
+                {% endfor %}
+            </select>
+            <div class="invalid-feedback">{{ errors.get('sex') }}</div>
+        </div>
+
+        <div class="col-md-6">
+            <label for="maturity" class="form-label">Maturity</label>
+            <select class="form-select {{ 'is-invalid' if errors.get('maturity') }}" id="maturity" name="maturity">
+                <option value="">Unspecified</option>
+                {% for option in maturity_options %}
+                <option value="{{ option }}" {% if form_data.get('maturity') == option %}selected{% endif %}>{{ option }}</option>
+                {% endfor %}
+            </select>
+            <div class="invalid-feedback">{{ errors.get('maturity') }}</div>
+        </div>
+
+        <div class="col-md-6">
+            <label for="status_id" class="form-label">Status</label>
+            <select class="form-select {{ 'is-invalid' if errors.get('status_id') }}" id="status_id" name="status_id" required>
+                <option value="">Select status</option>
+                {% for option in status_options %}
+                <option value="{{ option.id }}" {% if form_data.get('status_id') == option.id|string %}selected{% endif %}>{{ option.name }}</option>
+                {% endfor %}
+            </select>
+            <div class="invalid-feedback">{{ errors.get('status_id') }}</div>
+        </div>
+
+        <div class="col-md-6">
+            <label for="rebaited" class="form-label">Rebaited</label>
+            <select class="form-select {{ 'is-invalid' if errors.get('rebaited') }}" id="rebaited" name="rebaited" required>
+                <option value="">Select option</option>
+                {% for option in rebaited_options %}
+                <option value="{{ option }}" {% if form_data.get('rebaited') == option %}selected{% endif %}>{{ option }}</option>
+                {% endfor %}
+            </select>
+            <div class="invalid-feedback">{{ errors.get('rebaited') }}</div>
+        </div>
+
+        <div class="col-md-6">
+            <label for="bait_type_id" class="form-label">Bait Type</label>
+            <select class="form-select {{ 'is-invalid' if errors.get('bait_type_id') }}" id="bait_type_id" name="bait_type_id" required>
+                <option value="">Select bait type</option>
+                {% for option in bait_type_options %}
+                <option value="{{ option.id }}" {% if form_data.get('bait_type_id') == option.id|string %}selected{% endif %}>{{ option.name }}</option>
+                {% endfor %}
+            </select>
+            <div class="invalid-feedback">{{ errors.get('bait_type_id') }}</div>
+        </div>
+
+        <div class="col-md-6">
+            <label for="condition_id" class="form-label">Trap Condition</label>
+            <select class="form-select {{ 'is-invalid' if errors.get('condition_id') }}" id="condition_id" name="condition_id" required>
+                <option value="">Select condition</option>
+                {% for option in condition_options %}
+                <option value="{{ option.id }}" {% if form_data.get('condition_id') == option.id|string %}selected{% endif %}>{{ option.name }}</option>
+                {% endfor %}
+            </select>
+            <div class="invalid-feedback">{{ errors.get('condition_id') }}</div>
+        </div>
+
+        <div class="col-md-4">
+            <label for="strikes" class="form-label">Strikes</label>
+            <input type="number" min="0" class="form-control {{ 'is-invalid' if errors.get('strikes') }}" id="strikes" name="strikes" value="{{ form_data.get('strikes', '0') }}" required>
+            <div class="invalid-feedback">{{ errors.get('strikes') }}</div>
+        </div>
+
+        <div class="col-12">
+            <label for="notes" class="form-label">Notes</label>
+            <textarea class="form-control {{ 'is-invalid' if errors.get('notes') }}" id="notes" name="notes" rows="4">{{ form_data.get('notes', '') }}</textarea>
+            <div class="invalid-feedback">{{ errors.get('notes') }}</div>
+        </div>
+
+        <div class="col-12 d-flex gap-2 mt-3">
+            <button type="submit" class="btn btn-success">Save Changes</button>
+            <a href="{{ url_for('view_catch_detail', catch_id=catch_id) }}" class="btn btn-outline-secondary">Cancel</a>
+        </div>
+    </div>
+</form>
+{% endblock %}

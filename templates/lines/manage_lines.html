@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+{% block title %}Line Management{% endblock %}
+
+{% block content %}
+<div class="container py-2">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="mb-0">Line Management</h1>
+        <span class="badge bg-danger">Admin</span>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-header">Create New Line</div>
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('manage_lines') }}" novalidate>
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-6">
+                        <label for="name" class="form-label">Line Name</label>
+                        <input
+                            type="text"
+                            id="name"
+                            name="name"
+                            class="form-control {{ 'is-invalid' if errors.get('name') }}"
+                            maxlength="100"
+                            value="{{ form_data.get('name', '') }}"
+                            placeholder="Enter line name"
+                        >
+                        {% if errors.get('name') %}
+                            <div class="invalid-feedback">{{ errors.get('name') }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="col-md-4">
+                        <label for="line_type" class="form-label">Line Type</label>
+                        <select
+                            id="line_type"
+                            name="line_type"
+                            class="form-select {{ 'is-invalid' if errors.get('line_type') }}"
+                        >
+                            <option value="">Select line type</option>
+                            {% for line_type in line_types %}
+                                <option value="{{ line_type }}"
+                                    {% if form_data.get('line_type') == line_type %}selected{% endif %}>
+                                    {{ line_type }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                        {% if errors.get('line_type') %}
+                            <div class="invalid-feedback">{{ errors.get('line_type') }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary w-100">Create Line</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-header">Existing Lines</div>
+        <div class="card-body p-0">
+            {% if lines %}
+                <div class="table-responsive">
+                    <table class="table table-striped mb-0">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Type</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for line in lines %}
+                                <tr>
+                                    <td>
+                                        <a href="{{ url_for('view_line_traps', line_id=line.id) }}" class="text-decoration-none">
+                                            {{ line.name }}
+                                        </a>
+                                    </td>
+                                    <td>{{ line.line_type }}</td>
+                                    <td>
+                                        {% if line.is_retired %}
+                                            <span class="badge bg-secondary">Inactive</span>
+                                        {% else %}
+                                            <span class="badge bg-success">Active</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="p-3 text-muted">No lines have been created yet.</div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% if errors %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const errorMessage = {{ (errors.get('name') or errors.get('line_type') or 'Unable to create line.')|tojson }};
+    showToast(errorMessage, false);
+});
+</script>
+{% endif %}
+{% endblock %}
