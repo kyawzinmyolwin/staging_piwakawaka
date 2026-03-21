@@ -13,7 +13,7 @@ from piwakawaka.auth import login_required, role_required
 @login_required
 def catches():
     # --- Get filter values from URL query params ---
-    active_tab     = request.args.get('tab', 'all') # default to 'all' if no tab specified
+    active_tab     = request.args.get('tab', 'all')
     filter_line    = request.args.get('line', '')
     filter_species = request.args.get('species', '')
     filter_bait    = request.args.get('bait', '')
@@ -24,20 +24,20 @@ def catches():
     query = '''
         SELECT
             tc.id,
-            l.name        AS line_name,
-            t.code        AS trap_code,
-            s.name        AS species,
-            bt.name       AS bait_type,
+            tc.recorded_by        AS recorded_by_id,
+            l.name                AS line_name,
+            t.code                AS trap_code,
+            s.name                AS species,
+            bt.name               AS bait_type,
             tc.strikes,
             tc.date_checked,
-            tc.recorded_by  AS recorded_by_id,
             tc.sex,
             tc.maturity,
-            ts.name       AS status,
-            tcon.name     AS condition,
+            ts.name               AS status,
+            tcon.name             AS condition,
             tc.rebaited,
             tc.notes,
-            u.username    AS recorded_by
+            u.username            AS recorded_by
         FROM trap_catch tc
         JOIN trap           t    ON tc.trap_id      = t.id
         JOIN line           l    ON t.line_id        = l.id
@@ -187,14 +187,12 @@ def edit_catch(catch_id):
 
     cursor = db.get_cursor()
 
-    # Fetch user's account creation date to validate date_checked against it
     cursor.execute("""
     SELECT created_at FROM "user" WHERE id = %s
     """, (session.get('user_id'),))
     user = cursor.fetchone()
     account_created = user['created_at']
 
-    # Format for HTML datetime-local input (YYYY-MM-DDTHH:MM)
     min_date = user['created_at'].strftime('%Y-%m-%dT%H:%M')
     max_date = datetime.now().strftime('%Y-%m-%dT%H:%M')
 
@@ -236,7 +234,6 @@ def edit_catch(catch_id):
 
         errors = {}
 
-        # Parse and validate date once
         date_checked = parse_datetime_local(form_data['date_checked'])
         if not date_checked:
             errors['date_checked'] = 'Please enter a valid date and time.'
