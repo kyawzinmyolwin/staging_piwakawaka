@@ -145,7 +145,7 @@ def login():
 
         if not username or not password:
             flash('Please enter your username and password.', 'danger')
-            return render_template('login.html')
+            return render_template('login.html', prefill_username=username)
 
         try:
             cursor = db.get_cursor()
@@ -162,7 +162,7 @@ def login():
             if user and bcrypt.checkpw(password.encode('utf-8'), user['password_hash'].encode('utf-8')):
                 if not user['is_active']:
                     flash('Your account has been deactivated. Please contact an administrator.', 'danger')
-                    return render_template('login.html')
+                    return render_template('login.html', prefill_username=username)
 
                 session['user_id'] = user['id']
                 session['username'] = user['username']
@@ -170,12 +170,12 @@ def login():
                 return redirect(url_for('dashboard'))
             else:
                 flash('Invalid username or password.', 'danger')
-                return render_template('login.html')
+                return render_template('login.html', prefill_username=username)
 
         except Exception as e:
             flash('A database error occurred. Please try again later.', 'danger')
             app.logger.error(f'Login error: {e}')
-            return render_template('login.html')
+            return render_template('login.html', prefill_username=username)
 
     return render_template('login.html')
 
@@ -183,5 +183,5 @@ def login():
 @app.route('/logout')
 def logout():
     session.clear()
-    flash('You have been logged out.', 'info')
+    flash('You have been logged out.', 'success')
     return redirect(url_for('home'))
