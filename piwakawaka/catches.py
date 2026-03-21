@@ -93,7 +93,7 @@ def catches():
                            filter_from=filter_from,
                            filter_to=filter_to)
 
-#Zin#
+
 SEX_OPTIONS = ['Male', 'Female']
 MATURITY_OPTIONS = ['Juvenile', 'Adult']
 REBAITED_OPTIONS = ['Yes', 'No']
@@ -120,36 +120,6 @@ def parse_datetime_local(value):
         return datetime.strptime(value, '%Y-%m-%dT%H:%M')
     except (TypeError, ValueError):
         return None
-
-
-@app.route('/catches')
-@login_required
-def view_catches():
-    try:
-        cursor = db.get_cursor()
-        cursor.execute(
-            '''SELECT tc.id,
-                      tc.date_checked,
-                      t.code AS trap_code,
-                      s.name AS species,
-                      ts.name AS status,
-                      tc.recorded_by,
-                      u.username AS recorded_by_username
-               FROM trap_catch tc
-               JOIN trap t ON tc.trap_id = t.id
-               JOIN species s ON tc.species_id = s.id
-               JOIN trap_status ts ON tc.status_id = ts.id
-               LEFT JOIN "user" u ON tc.recorded_by = u.id
-               ORDER BY tc.date_checked DESC, tc.id DESC'''
-        )
-        catches = cursor.fetchall()
-        cursor.close()
-    except Exception as e:
-        app.logger.error(f'Error loading trap catches: {e}')
-        flash('Unable to load trap catch records right now.', 'danger')
-        catches = []
-
-    return render_template('catches/view_catches.html', catches=catches)
 
 
 @app.route('/catches/<int:catch_id>')
@@ -188,11 +158,11 @@ def view_catch_detail(catch_id):
     except Exception as e:
         app.logger.error(f'Error loading trap catch {catch_id}: {e}')
         flash('Unable to load trap catch record right now.', 'danger')
-        return redirect(url_for('view_catches'))
+        return redirect(url_for('catches'))
 
     if not catch_record:
         flash('Trap catch record not found.', 'warning')
-        return redirect(url_for('view_catches'))
+        return redirect(url_for('catches'))
 
     can_edit = (
         session.get('role') == 'Operator'
@@ -206,9 +176,9 @@ def view_catch_detail(catch_id):
 @login_required
 @role_required('Operator')
 def edit_catch(catch_id):
-    
+
     cursor = db.get_cursor()
-    
+
     # Fetch user's account creation date to validate date_checked against it
     cursor.execute("""
     SELECT created_at FROM "user" WHERE id = %s
@@ -218,7 +188,7 @@ def edit_catch(catch_id):
 
     # Format for HTML datetime-local input (YYYY-MM-DDTHH:MM)
     min_date = user['created_at'].strftime('%Y-%m-%dT%H:%M')
-    max_date = datetime.now().strftime('%Y-%m-%dT%H:%M')    
+    max_date = datetime.now().strftime('%Y-%m-%dT%H:%M')
 
     cursor.execute(
         '''SELECT id, trap_id, date_checked, recorded_by,
@@ -233,7 +203,7 @@ def edit_catch(catch_id):
     if not catch_record:
         cursor.close()
         flash('Trap catch record not found.', 'warning')
-        return redirect(url_for('view_catches'))
+        return redirect(url_for('catches'))
 
     if catch_record['recorded_by'] != session.get('user_id'):
         cursor.close()
@@ -245,35 +215,28 @@ def edit_catch(catch_id):
     if request.method == 'POST':
         form_data = {
             'date_checked': request.form.get('date_checked', '').strip(),
-            'species_id': request.form.get('species_id', '').strip(),
-            'sex': request.form.get('sex', '').strip(),
-            'maturity': request.form.get('maturity', '').strip(),
-            'status_id': request.form.get('status_id', '').strip(),
-            'rebaited': request.form.get('rebaited', '').strip(),
+            'species_id':   request.form.get('species_id', '').strip(),
+            'sex':          request.form.get('sex', '').strip(),
+            'maturity':     request.form.get('maturity', '').strip(),
+            'status_id':    request.form.get('status_id', '').strip(),
+            'rebaited':     request.form.get('rebaited', '').strip(),
             'bait_type_id': request.form.get('bait_type_id', '').strip(),
             'condition_id': request.form.get('condition_id', '').strip(),
-            'strikes': request.form.get('strikes', '').strip(),
-            'notes': request.form.get('notes', '').strip(),
+            'strikes':      request.form.get('strikes', '').strip(),
+            'notes':        request.form.get('notes', '').strip(),
         }
 
         errors = {}
-        date_checked = None
-        try: 
-            date_checked = datetime.strptime(form_data['date_checked'], '%Y-%m-%dT%H:%M')
-        except ValueError:
+
+        # Parse and validate date once
+        date_checked = parse_datetime_local(form_data['date_checked'])
+        if not date_checked:
             errors['date_checked'] = 'Please enter a valid date and time.'
-        
-
-
-        if date_checked is not None:
+        else:
             if date_checked > datetime.now():
                 errors['date_checked'] = 'Date checked cannot be in the future.'
             elif date_checked < account_created:
                 errors['date_checked'] = 'Date checked cannot be before your account was created.'
-        
-        checked_at = parse_datetime_local(form_data['date_checked'])
-        if not checked_at:
-            errors['date_checked'] = 'Please enter a valid date and time.'
 
         valid_species_ids = {str(option['id']) for option in species_options}
         if form_data['species_id'] not in valid_species_ids:
@@ -344,7 +307,7 @@ def edit_catch(catch_id):
                        notes = %s
                    WHERE id = %s''',
                 (
-                    checked_at,
+                    date_checked,
                     int(form_data['species_id']),
                     form_data['sex'] or None,
                     form_data['maturity'] or None,
@@ -385,15 +348,15 @@ def edit_catch(catch_id):
 
     form_data = {
         'date_checked': catch_record['date_checked'].strftime('%Y-%m-%dT%H:%M') if catch_record['date_checked'] else '',
-        'species_id': str(catch_record['species_id']),
-        'sex': catch_record['sex'] or '',
-        'maturity': catch_record['maturity'] or '',
-        'status_id': str(catch_record['status_id']),
-        'rebaited': 'Yes' if catch_record['rebaited'] else 'No',
+        'species_id':   str(catch_record['species_id']),
+        'sex':          catch_record['sex'] or '',
+        'maturity':     catch_record['maturity'] or '',
+        'status_id':    str(catch_record['status_id']),
+        'rebaited':     'Yes' if catch_record['rebaited'] else 'No',
         'bait_type_id': str(catch_record['bait_type_id']),
         'condition_id': str(catch_record['condition_id']),
-        'strikes': str(catch_record['strikes']),
-        'notes': catch_record['notes'] or '',
+        'strikes':      str(catch_record['strikes']),
+        'notes':        catch_record['notes'] or '',
     }
 
     cursor.close()
@@ -413,5 +376,4 @@ def edit_catch(catch_id):
         rebaited_options=REBAITED_OPTIONS,
         min_date=min_date,
         max_date=max_date,
-
     )
