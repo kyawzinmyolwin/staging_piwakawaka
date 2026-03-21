@@ -199,14 +199,13 @@ def manage_lines():
                 errors['name'] = 'Line name is already taken.'
 
 
-        else:
+        if not errors:                  # ← correct guard
             cursor.execute("""
                 INSERT INTO line (name, line_type, is_retired)
                 VALUES (%s, %s, FALSE);
             """, (name, line_type))
             db.get_db().commit()
             cursor.close()
-
             flash('Line created successfully.', 'success')
             return redirect(url_for('manage_lines'))
 
