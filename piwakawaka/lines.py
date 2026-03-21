@@ -198,8 +198,7 @@ def manage_lines():
             if existing_line:
                 errors['name'] = 'Line name is already taken.'
 
-        if errors:
-            flash('Unable to create line. Please fix the form errors.', 'danger')
+
         else:
             cursor.execute("""
                 INSERT INTO line (name, line_type, is_retired)

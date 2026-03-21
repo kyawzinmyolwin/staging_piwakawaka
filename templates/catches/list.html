@@ -16,12 +16,14 @@
             All Catches
         </a>
     </li>
+    {% if session.get('role') != 'Observer' %}
     <li class="nav-item">
         <a class="nav-link {% if active_tab == 'mine' %}active{% endif %}"
            href="{{ url_for('catches', tab='mine', line=filter_line, species=filter_species, bait=filter_bait, date_from=filter_from, date_to=filter_to) }}">
             My Catches
         </a>
     </li>
+    {% endif %}
 </ul>
 
 <!-- Filter Form -->
