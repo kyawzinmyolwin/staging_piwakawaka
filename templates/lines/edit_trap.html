@@ -1,23 +1,21 @@
 {% extends 'base.html' %}
-{% block title %}Add Trap{% endblock %}
+{% block title %}Edit Trap{% endblock %}
 
 {% block content %}
-<div class="container py-4">
+<div class="container py-2">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h1 class="mb-1">Add Trap</h1>
+            <h1 class="mb-1">Edit Trap</h1>
             <p class="text-muted mb-0">
-                Line: <strong>{{ line.name }}</strong>
+                Trap: <strong>{{ trap.code }}</strong>
             </p>
         </div>
-        <a href="{{ url_for('view_line_traps', line_id=line.id) }}" class="btn btn-outline-secondary">
-            Back
-        </a>
+        <a href="{{ url_for('view_line_traps', line_id=trap.line_id) }}" class="btn btn-outline-secondary">Back to Line</a>
     </div>
 
     <div class="card shadow-sm">
         <div class="card-body">
-            <form method="POST" novalidate id="add-trap-form">
+            <form method="POST" novalidate id="edit-trap-form">
                 <div class="row g-3">
                     <div class="col-md-6">
                         <label for="code" class="form-label">Trap Code</label>
@@ -78,8 +76,9 @@
                     </div>
                 </div>
 
-                <div class="mt-4">
-                    <button type="submit" class="btn btn-primary">Add Trap</button>
+                <div class="mt-4 d-flex gap-2">
+                    <button type="submit" class="btn btn-success">Save Changes</button>
+                    <a href="{{ url_for('view_line_traps', line_id=trap.line_id) }}" class="btn btn-outline-secondary">Cancel</a>
                 </div>
             </form>
         </div>
@@ -89,7 +88,7 @@
 
 {% block scripts %}
 <script>
-document.getElementById('add-trap-form').addEventListener('submit', function(e) {
+document.getElementById('edit-trap-form').addEventListener('submit', function(e) {
     if (!this.checkValidity()) {
         e.preventDefault();
         e.stopPropagation();

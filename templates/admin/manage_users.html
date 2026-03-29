@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+{% block title %}Manage Users{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h1 class="mb-4">User Management</h1>
+
+    <div class="card shadow-sm">
+        <div class="card-header">
+            All Registered Users
+        </div>
+        <div class="card-body">
+            {% if users %}
+                <div class="table-responsive">
+                    <table class="table table-striped align-middle">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Username</th>
+                                <th>Email</th>
+                                <th>Role</th>
+                                <th>Status</th>
+                                <th style="min-width: 220px;">Account Status</th>
+                                <th style="min-width: 260px;">Change Role</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user in users %}
+                                <tr>
+                                    <td>{{ user.first_name }} {{ user.last_name }}</td>
+                                    <td>{{ user.username }}</td>
+                                    <td>{{ user.email }}</td>
+                                    <td>
+                                        <span class="badge bg-info text-dark">{{ user.role_name }}</span>
+                                    </td>
+                                    <td>
+                                        {% if user.is_active %}
+                                            <span class="badge bg-success">Active</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">Inactive</span>
+                                        {% endif %}
+                                    </td>
+
+                                    <td>
+                                        <form method="POST"
+                                              action="{{ url_for('toggle_user_status', user_id=user.id) }}"
+                                              onsubmit="
+                                                {% if user.id == session['user_id'] and user.is_active %}
+                                                    alert('An Admin cannot deactivate their own account.');
+                                                    return false;
+                                                {% elif user.is_active %}
+                                                    return confirm('Are you sure you want to set {{ user.username }} to inactive? This will immediately block login for this account.');
+                                                {% else %}
+                                                    return confirm('Are you sure you want to set {{ user.username }} to active? This user will be able to log in again.');
+                                                {% endif %}
+                                              ">
+                                            {% if user.is_active %}
+                                                <button type="submit" class="btn btn-outline-danger btn-sm">
+                                                    Set Inactive
+                                                </button>
+                                            {% else %}
+                                                <button type="submit" class="btn btn-outline-success btn-sm">
+                                                    Set Active
+                                                </button>
+                                            {% endif %}
+                                        </form>
+                                    </td>
+
+                                    <td>
+                                        <form method="POST"
+                                              action="{{ url_for('change_user_role', user_id=user.id) }}"
+                                              class="d-flex gap-2"
+                                              onsubmit="
+                                                const selectedRole = this.querySelector('select').value;
+                                                const currentRole = '{{ user.role_name }}';
+                                                if (selectedRole === currentRole) {
+                                                    alert('This user already has the selected role.');
+                                                    return false;
+                                                }
+                                                if (currentRole === 'Admin' && selectedRole !== 'Admin') {
+                                                    return confirm('Warning: this will remove Admin privileges from {{ user.username }}. Do you want to continue?');
+                                                }
+                                                return confirm('Are you sure you want to change {{ user.username }}\\'s role?');
+                                              ">
+                                            <select name="role_id" class="form-select form-select-sm">
+                                                {% for role in roles %}
+                                                    <option value="{{ role.id }}"
+                                                        {% if role.name == user.role_name %}selected{% endif %}>
+                                                        {{ role.name }}
+                                                    </option>
+                                                {% endfor %}
+                                            </select>
+                                            <button type="submit" class="btn btn-outline-primary btn-sm">
+                                                Update
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="text-muted mb-0">No users found.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

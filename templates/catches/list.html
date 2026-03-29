@@ -1,39 +1,35 @@
 {% extends 'base.html' %}
-
 {% block title %}Trap Catch Records{% endblock %}
 
 {% block content %}
 
 <div class="d-flex align-items-center justify-content-between mb-3">
     <h2 class="mb-0">Trap Catch Records</h2>
-</div>
-
-<!-- Tabs -->
-<ul class="nav nav-tabs mb-3">
-    <li class="nav-item">
-        <a class="nav-link {% if active_tab == 'all' %}active{% endif %}"
-           href="{{ url_for('catches', tab='all', line=filter_line, species=filter_species, bait=filter_bait, date_from=filter_from, date_to=filter_to) }}">
-            All Catches
-        </a>
-    </li>
-    {% if session.get('role') != 'Observer' %}
-    <li class="nav-item">
-        <a class="nav-link {% if active_tab == 'mine' %}active{% endif %}"
-           href="{{ url_for('catches', tab='mine', line=filter_line, species=filter_species, bait=filter_bait, date_from=filter_from, date_to=filter_to) }}">
-            My Catches
-        </a>
-    </li>
+    {% if assignable_lines %}
+    <div class="dropdown">
+        <button class="btn btn-success dropdown-toggle" type="button"
+                id="addCatchDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="bi bi-clipboard-plus me-1"></i>Add Catch Record
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="addCatchDropdown">
+            <li><h6 class="dropdown-header">Select a line</h6></li>
+            {% for line in assignable_lines %}
+            <li>
+                <a class="dropdown-item" href="{{ url_for('add_catch', line_id=line.id) }}">
+                    {{ line.name }}
+                </a>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
     {% endif %}
-</ul>
+</div>
 
 <!-- Filter Form -->
 <div class="card mb-3">
     <div class="card-body pb-2">
         <form method="GET" action="{{ url_for('catches') }}" id="filter-form">
-
-            <!-- Preserve active tab across filter submissions -->
             <input type="hidden" name="tab" value="{{ active_tab }}">
-
             <div class="row g-2 align-items-end">
 
                 <div class="col-6 col-md-2">
@@ -89,7 +85,8 @@
                         <i class="bi bi-funnel me-1"></i>Filter
                     </button>
                     {% if filter_line or filter_species or filter_bait or filter_from or filter_to %}
-                    <a href="{{ url_for('catches', tab=active_tab) }}" class="btn btn-sm btn-outline-secondary"
+                    <a href="{{ url_for('catches', tab=active_tab) }}"
+                       class="btn btn-sm btn-outline-secondary"
                        title="Clear all filters"><i class="bi bi-x-lg"></i></a>
                     {% endif %}
                 </div>
@@ -104,7 +101,6 @@
 {% if any_filter %}
 <div class="filter-pills mb-3">
     <span class="text-muted small me-1">Filtered by:</span>
-
     {% if filter_line %}
     {% for line in lines if line.id|string == filter_line %}
     <span class="filter-pill">
@@ -113,7 +109,6 @@
     </span>
     {% endfor %}
     {% endif %}
-
     {% if filter_species %}
     {% for s in species_list if s.id|string == filter_species %}
     <span class="filter-pill">
@@ -122,7 +117,6 @@
     </span>
     {% endfor %}
     {% endif %}
-
     {% if filter_bait %}
     {% for b in bait_list if b.id|string == filter_bait %}
     <span class="filter-pill">
@@ -131,14 +125,12 @@
     </span>
     {% endfor %}
     {% endif %}
-
     {% if filter_from %}
     <span class="filter-pill">
         From: {{ filter_from }}
         <a href="{{ url_for('catches', tab=active_tab, line=filter_line, species=filter_species, bait=filter_bait, date_to=filter_to) }}" title="Remove">×</a>
     </span>
     {% endif %}
-
     {% if filter_to %}
     <span class="filter-pill">
         To: {{ filter_to }}
@@ -148,82 +140,110 @@
 </div>
 {% endif %}
 
-<!-- Results -->
-{% if records %}
-<p class="text-muted small mb-2">{{ records|length }} record{{ 's' if records|length != 1 }} found</p>
+<!-- ✅ Card wraps BOTH the tabs AND the content, always rendered -->
+<div class="card shadow-sm">
 
-<div class="table-responsive">
-    <table class="table table-hover align-middle table-cards">
-        <thead class="table-dark">
-            <tr>
-                <th>Date</th>
-                <th>Line</th>
-                <th>Trap</th>
-                <th>Species</th>
-                <th>Strikes</th>
-                <th>Status</th>
-                <th>Bait</th>
-                <th>Rebaited</th>
-                <th>Recorded By</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for r in records %}
-            <tr>
-                <td data-label="Date">{{ r.date_checked.strftime('%Y-%m-%d') }}</td>
-                <td data-label="Line">{{ r.line_name }}</td>
-                <td data-label="Trap">{{ r.trap_code }}</td>
-                <td data-label="Species">{{ r.species }}</td>
-                <td data-label="Strikes">
-                    {% if r.strikes > 0 %}
-                    <span class="badge bg-danger">{{ r.strikes }}</span>
-                    {% else %}
-                    <span class="badge bg-secondary">0</span>
-                    {% endif %}
-                </td>
-                <td data-label="Status">{{ r.status }}</td>
-                <td data-label="Bait">{{ r.bait_type }}</td>
-                <td data-label="Rebaited">
-                    {% if r.rebaited %}
-                    <span class="badge bg-success-subtle text-success">Yes</span>
-                    {% else %}
-                    <span class="badge bg-secondary-subtle text-secondary">No</span>
-                    {% endif %}
-                </td>
-                <td data-label="Recorded By">{{ r.recorded_by or '—' }}</td>
-                <td data-label="Actions">
-                    <a href="{{ url_for('view_catch_detail', catch_id=r.id) }}" class="btn btn-sm btn-outline-secondary">View</a>
-                    {% if session.get('role') == 'Operator' and r.recorded_by_id == session.get('user_id') %}
-                    <a href="{{ url_for('edit_catch', catch_id=r.id) }}" class="btn btn-sm btn-outline-success">Edit</a>
-                    {% endif %}
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</div>
+    <!-- Tabs always visible regardless of results -->
+    <div class="card-header p-0 border-bottom-0">
+        <ul class="nav nav-tabs card-header-tabs px-3 pt-2">
+            <li class="nav-item">
+                <a class="nav-link {% if active_tab == 'all' %}active{% endif %}"
+                   href="{{ url_for('catches', tab='all', line=filter_line, species=filter_species, bait=filter_bait, date_from=filter_from, date_to=filter_to) }}">
+                    All Catches
+                </a>
+            </li>
+            {% if session.get('role') != 'Observer' %}
+            <li class="nav-item">
+                <a class="nav-link {% if active_tab == 'mine' %}active{% endif %}"
+                   href="{{ url_for('catches', tab='mine', line=filter_line, species=filter_species, bait=filter_bait, date_from=filter_from, date_to=filter_to) }}">
+                    My Catches
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+    </div>  <!-- ✅ card-header closes here -->
 
-{% else %}
-<!-- Empty state -->
-<div class="text-center py-5">
-    <div class="mb-3" style="font-size:3rem; color: var(--pflu-green-light); opacity:0.5;">
-        <i class="bi bi-clipboard-data"></i>
+    <div class="card-body p-0">  <!-- ✅ card-body opens after card-header -->
+        {% if records %}
+            <p class="text-muted small px-3 pt-3 mb-0">
+                {{ records|length }} record{{ 's' if records|length != 1 }} found
+            </p>
+            <div class="table-responsive">
+                <table class="table table-striped mb-0">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Line</th>
+                            <th>Trap</th>
+                            <th>Species</th>
+                            <th>Strikes</th>
+                            <th>Status</th>
+                            <th>Bait</th>
+                            <th>Rebaited</th>
+                            <th>Recorded By</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for r in records %}
+                        <tr>
+                            <td data-label="Date">{{ r.date_checked.strftime('%Y-%m-%d') }}</td>
+                            <td data-label="Line">{{ r.line_name }}</td>
+                            <td data-label="Trap">{{ r.trap_code }}</td>
+                            <td data-label="Species">{{ r.species }}</td>
+                            <td data-label="Strikes">
+                                {% if r.strikes > 0 %}
+                                <span class="badge bg-danger">{{ r.strikes }}</span>
+                                {% else %}
+                                <span class="badge bg-secondary">0</span>
+                                {% endif %}
+                            </td>
+                            <td data-label="Status">{{ r.status }}</td>
+                            <td data-label="Bait">{{ r.bait_type }}</td>
+                            <td data-label="Rebaited">
+                                {% if r.rebaited %}
+                                <span class="badge bg-success-subtle text-success">Yes</span>
+                                {% else %}
+                                <span class="badge bg-secondary-subtle text-secondary">No</span>
+                                {% endif %}
+                            </td>
+                            <td data-label="Recorded By">{{ r.recorded_by or '—' }}</td>
+                            <td data-label="Actions">
+                                <a href="{{ url_for('view_catch_detail', catch_id=r.id) }}"
+                                   class="btn btn-sm btn-outline-secondary">View</a>
+                                {% if session.get('role') == 'Operator' and r.recorded_by_id == session.get('user_id') %}
+                                <a href="{{ url_for('edit_catch', catch_id=r.id) }}"
+                                   class="btn btn-sm btn-outline-success">Edit</a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <!-- Empty state — inside the card so tabs stay visible -->
+            <div class="text-center py-5">
+                <div class="mb-3" style="font-size:3rem; color: var(--pflu-green-light); opacity:0.5;">
+                    <i class="bi bi-clipboard-data"></i>
+                </div>
+                {% if any_filter %}
+                <p class="text-muted mb-1">No records match these filters.</p>
+                <p class="text-muted small mb-3">Try adjusting or removing some filters.</p>
+                <a href="{{ url_for('catches', tab=active_tab) }}" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-x-circle me-1"></i>Clear Filters
+                </a>
+                {% elif active_tab == 'mine' %}
+                <p class="text-muted mb-1 fw-semibold">You have no catch records yet.</p>
+                <p class="text-muted small mb-0">Records you create will appear here.</p>
+                {% else %}
+                <p class="text-muted mb-1 fw-semibold">No catch records yet.</p>
+                <p class="text-muted small mb-0">Records will appear here once operators begin logging trap checks.</p>
+                {% endif %}
+            </div>
+        {% endif %}
     </div>
-    {% if any_filter %}
-    <p class="text-muted mb-1">No records match these filters.</p>
-    <p class="text-muted small mb-3">Try adjusting or removing some filters.</p>
-    <a href="{{ url_for('catches', tab=active_tab) }}" class="btn btn-outline-secondary btn-sm">
-        <i class="bi bi-x-circle me-1"></i>Clear Filters
-    </a>
-    {% elif active_tab == 'mine' %}
-    <p class="text-muted mb-1 fw-semibold">You have no catch records yet.</p>
-    <p class="text-muted small mb-0">Records you create will appear here.</p>
-    {% else %}
-    <p class="text-muted mb-1 fw-semibold">No catch records yet.</p>
-    <p class="text-muted small mb-0">Records will appear here once operators begin logging trap checks.</p>
-    {% endif %}
+
 </div>
-{% endif %}
 
 {% endblock %}

@@ -5,13 +5,13 @@
 <div class="container py-2">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1 class="mb-0">Line Management</h1>
-        <span class="badge bg-danger">Admin</span>
+        <span class="role-badge role-badge-admin">Admin</span>
     </div>
 
     <div class="card shadow-sm mb-4">
         <div class="card-header">Create New Line</div>
         <div class="card-body">
-            <form method="POST" action="{{ url_for('manage_lines') }}" novalidate>
+            <form method="POST" action="{{ url_for('manage_lines') }}" novalidate id="create-line-form">
                 <div class="row g-3 align-items-end">
                     <div class="col-md-6">
                         <label for="name" class="form-label">Line Name</label>
@@ -23,10 +23,9 @@
                             maxlength="100"
                             value="{{ form_data.get('name', '') }}"
                             placeholder="Enter line name"
+                            required
                         >
-                        {% if errors.get('name') %}
-                            <div class="invalid-feedback">{{ errors.get('name') }}</div>
-                        {% endif %}
+                        <div class="invalid-feedback">{{ errors.get('name') or 'Line name is required.' }}</div>
                     </div>
 
                     <div class="col-md-4">
@@ -35,6 +34,7 @@
                             id="line_type"
                             name="line_type"
                             class="form-select {{ 'is-invalid' if errors.get('line_type') }}"
+                            required
                         >
                             <option value="">Select line type</option>
                             {% for line_type in line_types %}
@@ -44,9 +44,7 @@
                                 </option>
                             {% endfor %}
                         </select>
-                        {% if errors.get('line_type') %}
-                            <div class="invalid-feedback">{{ errors.get('line_type') }}</div>
-                        {% endif %}
+                        <div class="invalid-feedback">{{ errors.get('line_type') or 'Please select a line type.' }}</div>
                     </div>
 
                     <div class="col-md-2">
@@ -57,9 +55,10 @@
         </div>
     </div>
 
-    <div class="card shadow-sm">
-        <div class="card-header">Existing Lines</div>
+    <div class="card shadow-sm mb-4">
+        <div class="card-header">Active Lines</div>
         <div class="card-body p-0">
+            {% set active = namespace(count=0) %}
             {% if lines %}
                 <div class="table-responsive">
                     <table class="table table-striped mb-0">
@@ -68,29 +67,100 @@
                                 <th>Name</th>
                                 <th>Type</th>
                                 <th>Status</th>
+                                <th class="text-end">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for line in lines %}
-                                <tr>
-                                    <td>
-                                        <a href="{{ url_for('view_line_traps', line_id=line.id) }}" class="text-decoration-none">
-                                            {{ line.name }}
-                                        </a>
-                                    </td>
-                                    <td>{{ line.line_type }}</td>
-                                    <td>
-                                        {% if line.is_retired %}
-                                            <span class="badge bg-secondary">Inactive</span>
-                                        {% else %}
-                                            <span class="badge bg-success">Active</span>
-                                        {% endif %}
-                                    </td>
-                                </tr>
+                                {% if not line.is_retired %}
+                                    {% set active.count = active.count + 1 %}
+                                    <tr>
+                                        <td>
+                                            <a href="{{ url_for('view_line_traps', line_id=line.id) }}" class="text-decoration-none">
+                                                {{ line.name }}
+                                            </a>
+                                        </td>
+                                        <td>{{ line.line_type }}</td>
+                                        <td><span class="badge bg-success">Active</span></td>
+                                        <td class="text-end">
+                                            <a href="{{ url_for('view_line_traps', line_id=line.id) }}" class="btn btn-outline-secondary btn-sm">
+                                                View
+                                            </a>
+                                            <a href="{{ url_for('edit_line', line_id=line.id) }}" class="btn btn-outline-primary btn-sm">
+                                                Edit
+                                            </a>
+                                            <form
+                                                method="POST"
+                                                action="{{ url_for('retire_line', line_id=line.id) }}"
+                                                class="d-inline"
+                                                data-confirm-message="{{ 'Retire ' ~ line.name ~ '? This will mark the line and its traps as inactive.' }}"
+                                                onsubmit="return confirm(this.dataset.confirmMessage);"
+                                            >
+                                                <button type="submit" class="btn btn-outline-danger btn-sm">Retire</button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                {% endif %}
                             {% endfor %}
                         </tbody>
                     </table>
                 </div>
+                {% if active.count == 0 %}
+                    <div class="p-3 text-muted">No active lines are available.</div>
+                {% endif %}
+            {% else %}
+                <div class="p-3 text-muted">No lines have been created yet.</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-header">Inactive Lines</div>
+        <div class="card-body p-0">
+            {% set inactive = namespace(count=0) %}
+            {% if lines %}
+                <div class="table-responsive">
+                    <table class="table table-striped mb-0">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Type</th>
+                                <th>Status</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for line in lines %}
+                                {% if line.is_retired %}
+                                    {% set inactive.count = inactive.count + 1 %}
+                                    <tr>
+                                        <td>
+                                            <a href="{{ url_for('view_line_traps', line_id=line.id) }}" class="text-decoration-none">
+                                                {{ line.name }}
+                                            </a>
+                                        </td>
+                                        <td>{{ line.line_type }}</td>
+                                        <td><span class="badge bg-secondary">Inactive</span></td>
+                                        <td class="text-end">
+                                            <form
+                                                method="POST"
+                                                action="{{ url_for('restore_line', line_id=line.id) }}"
+                                                class="d-inline"
+                                                data-confirm-message="{{ 'Restore ' ~ line.name ~ '? This will reactivate the line and its traps.' }}"
+                                                onsubmit="return confirm(this.dataset.confirmMessage);"
+                                            >
+                                                <button type="submit" class="btn btn-outline-success btn-sm">Restore</button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                {% endif %}
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% if inactive.count == 0 %}
+                    <div class="p-3 text-muted">No inactive lines yet.</div>
+                {% endif %}
             {% else %}
                 <div class="p-3 text-muted">No lines have been created yet.</div>
             {% endif %}
@@ -99,11 +169,29 @@
 </div>
 
 {% if errors %}
+<div
+    id="create-line-error"
+    data-error-message="{{ errors.get('name') or errors.get('line_type') or 'Unable to create line.' }}"
+    hidden
+></div>
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    const errorMessage = {{ (errors.get('name') or errors.get('line_type') or 'Unable to create line.')|tojson }};
+    const errorSource = document.getElementById('create-line-error');
+    const errorMessage = errorSource?.dataset.errorMessage || 'Unable to create line.';
     showToast(errorMessage, false);
 });
 </script>
 {% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.getElementById('create-line-form').addEventListener('submit', function(e) {
+    if (!this.checkValidity()) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+    this.classList.add('was-validated');
+});
+</script>
 {% endblock %}

@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% block title %}My Line Assignments{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="mb-0">My Line Assignments</h1>
+        <span class="role-badge role-badge-operator">Operator</span>
+    </div>
+
+    {% if assigned_lines %}
+        <div class="card shadow-sm">
+            <div class="card-header">Lines Assigned to Me</div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-striped mb-0">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Type</th>
+                                <th>Status</th>
+                                <th>Assigned On*</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for line in assigned_lines %}
+                                <tr>
+                                    <td>
+                                        <a href="{{ url_for('view_line_traps', line_id=line.id) }}"
+                                           class="text-decoration-none">
+                                            {{ line.name }}
+                                        </a>
+                                        <span class="badge bg-primary ms-1">My Line</span>
+                                    </td>
+                                    <td>{{ line.line_type }}</td>
+                                    <td>
+                                        {% if line.is_retired %}
+                                            <span class="badge bg-secondary">Inactive</span>
+                                        {% else %}
+                                            <span class="badge bg-success">Active</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ line.assignment_date }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <p class="text-muted mb-0">No lines are currently assigned to you.</p>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+

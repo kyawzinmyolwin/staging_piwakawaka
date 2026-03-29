@@ -8,10 +8,207 @@
 # US24 View Operator Activity (Admin)
 # US25 Activate/Deactivate Accounts (Admin)
 # US26 Change User Roles (Admin)
-from flask import render_template, request, redirect, url_for, flash
+from flask import render_template, request, redirect, url_for, flash, session
 from piwakawaka import app, db
 from piwakawaka.auth import login_required, role_required
 
+
+
+@app.route('/admin/users')
+@login_required
+@role_required('Admin')
+def manage_users():
+    """
+    Display all users with their role and active/inactive status.
+
+    This page supports:
+    - viewing all registered users
+    - activating or deactivating accounts
+    - changing user roles
+    """
+    cursor = db.get_cursor()
+    cursor.execute("""
+        SELECT
+            u.id,
+            u.username,
+            u.email,
+            u.first_name,
+            u.last_name,
+            u.phone,
+            u.is_active,
+            u.created_at,
+            r.id AS role_id,
+            r.name AS role_name
+        FROM "user" u
+        JOIN role r ON u.role_id = r.id
+        ORDER BY u.first_name, u.last_name, u.username;
+    """)
+    users = cursor.fetchall()
+
+    cursor.execute("""
+        SELECT id, name
+        FROM role
+        WHERE name IN ('Observer', 'Operator', 'Admin')
+        ORDER BY
+            CASE
+                WHEN name = 'Observer' THEN 1
+                WHEN name = 'Operator' THEN 2
+                WHEN name = 'Admin' THEN 3
+                ELSE 4
+            END;
+    """)
+    roles = cursor.fetchall()
+    cursor.close()
+
+    return render_template(
+        'admin/manage_users.html',
+        users=users,
+        roles=roles
+    )
+
+
+@app.route('/admin/users/<int:user_id>/toggle-status', methods=['POST'])
+@login_required
+@role_required('Admin')
+def toggle_user_status(user_id):
+    """
+    Toggle a user's account status between active and inactive.
+
+    Rules:
+    - Admin can activate or deactivate other users
+    - Admin cannot deactivate their own account
+    - change is applied immediately
+    """
+    cursor = db.get_cursor()
+
+    cursor.execute("""
+        SELECT
+            u.id,
+            u.username,
+            u.first_name,
+            u.last_name,
+            u.is_active,
+            r.name AS role_name
+        FROM "user" u
+        JOIN role r ON u.role_id = r.id
+        WHERE u.id = %s;
+    """, (user_id,))
+    user = cursor.fetchone()
+
+    if not user:
+        cursor.close()
+        flash('User not found.', 'danger')
+        return redirect(url_for('manage_users'))
+
+    # Block self-deactivation
+    if user['id'] == session['user_id'] and user['is_active']:
+        cursor.close()
+        flash('An Admin cannot deactivate their own account.', 'danger')
+        return redirect(url_for('manage_users'))
+
+    new_status = not user['is_active']
+
+    cursor.execute("""
+        UPDATE "user"
+        SET is_active = %s
+        WHERE id = %s;
+    """, (new_status, user_id))
+    db.get_db().commit()
+    cursor.close()
+
+    if new_status:
+        flash(f"User '{user['username']}' has been activated successfully.", 'success')
+    else:
+        flash(f"User '{user['username']}' has been deactivated successfully.", 'success')
+
+    return redirect(url_for('manage_users'))
+
+
+@app.route('/admin/users/<int:user_id>/change-role', methods=['POST'])
+@login_required
+@role_required('Admin')
+def change_user_role(user_id):
+    """
+    Change a user's role to Observer, Operator, or Admin.
+
+    Rules:
+    - Admin can change roles of other users
+    - if selected role is the same as current role, no change is made
+    - if changing another Admin away from Admin, warn before submission in UI
+    """
+    new_role_id = request.form.get('role_id', '').strip()
+
+    if not new_role_id:
+        flash('Please select a role.', 'danger')
+        return redirect(url_for('manage_users'))
+
+    try:
+        new_role_id = int(new_role_id)
+    except ValueError:
+        flash('Invalid role selected.', 'danger')
+        return redirect(url_for('manage_users'))
+
+    cursor = db.get_cursor()
+
+    # Get user and current role
+    cursor.execute("""
+        SELECT
+            u.id,
+            u.username,
+            u.first_name,
+            u.last_name,
+            u.role_id,
+            cur_role.name AS current_role_name
+        FROM "user" u
+        JOIN role cur_role ON u.role_id = cur_role.id
+        WHERE u.id = %s;
+    """, (user_id,))
+    user = cursor.fetchone()
+
+    if not user:
+        cursor.close()
+        flash('User not found.', 'danger')
+        return redirect(url_for('manage_users'))
+
+    # Get target role
+    cursor.execute("""
+        SELECT id, name
+        FROM role
+        WHERE id = %s;
+    """, (new_role_id,))
+    target_role = cursor.fetchone()
+
+    if not target_role:
+        cursor.close()
+        flash('Selected role does not exist.', 'danger')
+        return redirect(url_for('manage_users'))
+
+    if target_role['name'] not in ['Observer', 'Operator', 'Admin']:
+        cursor.close()
+        flash('Invalid role selected.', 'danger')
+        return redirect(url_for('manage_users'))
+
+    # No-op protection
+    if user['role_id'] == target_role['id']:
+        cursor.close()
+        flash(f"User '{user['username']}' already has the role '{target_role['name']}'. No change was made.", 'warning')
+        return redirect(url_for('manage_users'))
+
+    cursor.execute("""
+        UPDATE "user"
+        SET role_id = %s
+        WHERE id = %s;
+    """, (target_role['id'], user_id))
+    db.get_db().commit()
+    cursor.close()
+
+    flash(
+        f"User '{user['username']}' role changed from '{user['current_role_name']}' to '{target_role['name']}' successfully.",
+        'success'
+    )
+    return redirect(url_for('manage_users'))
+
+    
 
 @app.route('/admin/line-assignments')
 @login_required

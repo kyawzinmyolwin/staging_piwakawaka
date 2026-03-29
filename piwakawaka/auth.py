@@ -7,14 +7,71 @@ from piwakawaka import db
 
 
 def login_required(f):
+    """
+    Decorator that ensures a user is authenticated and authorised to access a route.
+
+    This decorator performs the following checks:
+    1. Verifies that the user is logged in (session contains user_id)
+    2. Retrieves the latest account status and role from the database
+    3. Prevents access if the account is inactive
+    4. Synchronises the session role with the database (for role updates)
+    5. Handles edge cases where the user record no longer exists
+
+    If any check fails, the user is redirected to the login page with an appropriate message.
+
+    This ensures:
+    - Inactive users cannot access the system
+    - Role changes take effect immediately without re-login
+    - Sessions remain consistent with the database state
+
+    :param f: The view function being decorated
+    :return: Wrapped function with authentication and authorisation checks
+    """    
     @wraps(f)
     def decorated(*args, **kwargs):
+
+        # Step 1: Check whether the user is logged in
+        # If there is no user_id stored in the session, redirect to login page
         if not session.get('user_id'):
             flash('Please log in to access this page.', 'warning')
             return redirect(url_for('login'))
-        return f(*args, **kwargs)
-    return decorated
 
+        # Step 2: Retrieve the latest user status and role from the database
+        # This ensures that any changes made by an Admin are immediately enforced
+        cursor = db.get_cursor()
+        cursor.execute("""
+            SELECT
+                u.is_active,
+                r.name AS role_name
+            FROM "user" u
+            JOIN role r ON u.role_id = r.id
+            WHERE u.id = %s;
+        """, (session['user_id'],))
+        user = cursor.fetchone()
+        cursor.close()
+
+        # Step 3: Handle edge case where the user no longer exists
+        # This could happen if the account was deleted
+        if not user:
+            session.clear()
+            flash('User account not found. Please log in again.', 'danger')
+            return redirect(url_for('login'))
+
+        # Step 4: Check if the account is inactive
+        # If inactive, terminate the session and force logout
+        if not user['is_active']:
+            session.clear()
+            flash('Your account has been deactivated. Please contact the system administrator.', 'danger')
+            return redirect(url_for('login'))
+
+        # Step 5: Synchronize the user's role with the latest value in the database
+        # This ensures role changes take effect without requiring re-login
+        session['role'] = user['role_name']
+
+        # Step 6: Allow access to the requested view
+        return f(*args, **kwargs)
+
+    return decorated
 
 def role_required(*roles):
     def decorator(f):
@@ -70,12 +127,26 @@ def register():
         errors = {}
         if not first_name:
             errors['first_name'] = 'First name is required.'
+        elif len(first_name) <= 2:
+            errors['first_name'] = 'Must be more than 2 characters.'
+        elif first_name[0].isdigit():
+            errors['first_name'] = 'Must not start with a number.'
         if not last_name:
             errors['last_name'] = 'Last name is required.'
+        elif len(last_name) <= 2:
+            errors['last_name'] = 'Must be more than 2 characters.'
+        elif last_name[0].isdigit():
+            errors['last_name'] = 'Must not start with a number.'
         if not username:
             errors['username'] = 'Username is required.'
+        elif len(username) < 3:
+            errors['username'] = 'Username must be at least 3 characters.'
+        elif not re.match(r'^[A-Za-z0-9_]+$', username):
+            errors['username'] = 'Username may only contain letters, numbers, and underscores.'
         if not email:
             errors['email'] = 'Email is required.'
+        elif not re.match(r'^[^@\s]+@[^@\s]+\.[^@\s]+$', email):
+            errors['email'] = 'Please enter a valid email address.'
         if not password:
             errors['password'] = 'Password is required.'
         elif validate_password(password):
@@ -84,6 +155,10 @@ def register():
             errors['confirm_password'] = 'Please confirm your password.'
         elif password and password != confirm_password:
             errors['confirm_password'] = 'Passwords do not match.'
+        if phone and not re.match(r'^\+?[\d\s\-\(\)]{7,20}$', phone):
+            errors['phone'] = 'Please enter a valid phone number (e.g. 021 123 4567 or +64 21 123 4567).'
+        if emergency_contact_phone and not re.match(r'^\+?[\d\s\-\(\)]{7,20}$', emergency_contact_phone):
+            errors['emergency_contact_phone'] = 'Please enter a valid phone number.'
 
         if errors:
             return render_template('register.html', form_data=form_data, errors=errors)
@@ -145,7 +220,7 @@ def login():
 
         if not username or not password:
             flash('Please enter your username and password.', 'danger')
-            return render_template('login.html', prefill_username=username)
+            return render_template('login.html', username=username)
 
         try:
             cursor = db.get_cursor()
@@ -160,9 +235,10 @@ def login():
             cursor.close()
 
             if user and bcrypt.checkpw(password.encode('utf-8'), user['password_hash'].encode('utf-8')):
+                # Block inactive accounts
                 if not user['is_active']:
                     flash('Your account has been deactivated. Please contact an administrator.', 'danger')
-                    return render_template('login.html', prefill_username=username)
+                    return render_template('login.html', username=username)
 
                 session['user_id'] = user['id']
                 session['username'] = user['username']
@@ -170,12 +246,12 @@ def login():
                 return redirect(url_for('dashboard'))
             else:
                 flash('Invalid username or password.', 'danger')
-                return render_template('login.html', prefill_username=username)
+                return render_template('login.html', username=username)
 
         except Exception as e:
             flash('A database error occurred. Please try again later.', 'danger')
             app.logger.error(f'Login error: {e}')
-            return render_template('login.html', prefill_username=username)
+            return render_template('login.html', username=username)
 
     return render_template('login.html')
 
