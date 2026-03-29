@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% block title %}Edit Line{% endblock %}
+
+{% block content %}
+<div class="container py-2">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="mb-1">Edit Line</h1>
+            <p class="text-muted mb-0">
+                Current line: <strong>{{ line.name }}</strong>
+            </p>
+        </div>
+        <a href="{{ url_for('manage_lines') }}" class="btn btn-outline-secondary">Back to Management</a>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <form method="POST" novalidate id="edit-line-form">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label for="name" class="form-label">Line Name</label>
+                        <input
+                            type="text"
+                            id="name"
+                            name="name"
+                            class="form-control {{ 'is-invalid' if errors.get('name') }}"
+                            maxlength="100"
+                            value="{{ form_data.get('name', '') }}"
+                            required
+                        >
+                        <div class="invalid-feedback">{{ errors.get('name') or 'Line name is required.' }}</div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="line_type" class="form-label">Line Type</label>
+                        <select
+                            id="line_type"
+                            name="line_type"
+                            class="form-select {{ 'is-invalid' if errors.get('line_type') }}"
+                            required
+                        >
+                            <option value="">Select line type</option>
+                            {% for line_type in line_types %}
+                                <option value="{{ line_type }}"
+                                    {% if form_data.get('line_type') == line_type %}selected{% endif %}>
+                                    {{ line_type }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                        <div class="invalid-feedback">{{ errors.get('line_type') or 'Please select a line type.' }}</div>
+                    </div>
+                </div>
+
+                <div class="mt-4 d-flex gap-2">
+                    <button type="submit" class="btn btn-success">Save Changes</button>
+                    <a href="{{ url_for('manage_lines') }}" class="btn btn-outline-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.getElementById('edit-line-form').addEventListener('submit', function(e) {
+    if (!this.checkValidity()) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+    this.classList.add('was-validated');
+});
+</script>
+{% endblock %}

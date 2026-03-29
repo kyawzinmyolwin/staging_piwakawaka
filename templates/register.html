@@ -142,7 +142,11 @@
                         <label for="phone">Phone <span class="field-optional">(optional)</span></label>
                         <input type="text" id="phone" name="phone"
                                value="{{ form_data.get('phone', '') }}"
+                               class="{{ 'is-invalid' if errors.get('phone') }}"
                                placeholder="+64 21 000 0000" maxlength="20" autocomplete="tel">
+                        {% if errors.get('phone') %}
+                        <span class="field-error"><i class="bi bi-x-circle me-1"></i>{{ errors.phone }}</span>
+                        {% endif %}
                     </div>
                 </div>
 
@@ -166,7 +170,11 @@
                         <label for="emergency_contact_phone">Contact Phone</label>
                         <input type="text" id="emergency_contact_phone" name="emergency_contact_phone"
                                value="{{ form_data.get('emergency_contact_phone', '') }}"
+                               class="{{ 'is-invalid' if errors.get('emergency_contact_phone') }}"
                                maxlength="20">
+                        {% if errors.get('emergency_contact_phone') %}
+                        <span class="field-error"><i class="bi bi-x-circle me-1"></i>{{ errors.emergency_contact_phone }}</span>
+                        {% endif %}
                     </div>
                 </div>
 
@@ -236,7 +244,7 @@ pwInput.addEventListener('input', function () {
 const confirmInput = document.getElementById('confirm_password');
 confirmInput.addEventListener('input', function () {
     const fieldEl  = this.closest('.form-field');
-    const existing = fieldEl.querySelector('.field-error');
+    const existing = fieldEl.querySelector('.field-error[data-js]');
     if (existing) existing.remove();
     this.classList.remove('is-invalid', 'is-valid');
     if (!this.value) return;
@@ -244,6 +252,7 @@ confirmInput.addEventListener('input', function () {
         this.classList.add('is-invalid');
         const err = document.createElement('span');
         err.className = 'field-error';
+        err.setAttribute('data-js', '1');
         err.innerHTML = '<i class="bi bi-x-circle me-1"></i>Passwords do not match.';
         fieldEl.appendChild(err);
     } else {
@@ -251,42 +260,91 @@ confirmInput.addEventListener('input', function () {
     }
 });
 
-// ── Blur: show green on valid required fields ──────────────────────
-['username', 'email', 'first_name', 'last_name'].forEach(id => {
-    const input = document.getElementById(id);
-    input.addEventListener('blur', function () {
+// ── Clear field error on input ─────────────────────────────────────
+['username', 'email', 'password', 'confirm_password', 'first_name', 'last_name'].forEach(id => {
+    document.getElementById(id).addEventListener('input', function () {
+        this.classList.remove('is-invalid', 'is-valid');
+        this.closest('.form-field').querySelectorAll('.field-error[data-js]').forEach(el => el.remove());
+    });
+});
+
+// ── Shared markInvalid (used by blur + submit) ─────────────────────
+function markInvalid(input, message) {
+    input.classList.add('is-invalid');
+    const fieldEl = input.closest('.form-field');
+    if (!fieldEl.querySelector('.field-error[data-js]')) {
+        const err = document.createElement('span');
+        err.className = 'field-error';
+        err.setAttribute('data-js', '1');
+        err.innerHTML = '<i class="bi bi-x-circle me-1"></i>' + message;
+        fieldEl.appendChild(err);
+    }
+}
+
+// ── Blur: format checks + show green on valid fields ──────────────
+document.getElementById('email').addEventListener('blur', function () {
+    const val = this.value.trim();
+    if (!val) return;
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) {
+        markInvalid(this, 'Please enter a valid email address.');
+    } else {
+        this.classList.add('is-valid');
+    }
+});
+
+['username', 'first_name', 'last_name'].forEach(id => {
+    document.getElementById(id).addEventListener('blur', function () {
         if (!this.classList.contains('is-invalid') && this.value.trim()) {
             this.classList.add('is-valid');
         }
     });
-    input.addEventListener('input', function () {
-        this.classList.remove('is-valid');
-    });
 });
 
-// ── Submit: block on empty required fields ─────────────────────────
+// ── Submit: validate ALL fields, show ALL errors at once ───────────
 document.getElementById('register-form').addEventListener('submit', function (e) {
-    const required = ['username', 'email', 'password', 'confirm_password', 'first_name', 'last_name'];
-    let valid = true;
-    required.forEach(id => {
-        const input   = document.getElementById(id);
-        const fieldEl = input.closest('.form-field');
-        if (!input.value.trim()) {
-            input.classList.add('is-invalid');
-            if (!fieldEl.querySelector('.field-error')) {
-                const err = document.createElement('span');
-                err.className = 'field-error';
-                err.innerHTML = '<i class="bi bi-x-circle me-1"></i>This field is required.';
-                fieldEl.appendChild(err);
-            }
-            input.addEventListener('input', () => {
-                input.classList.remove('is-invalid');
-                const e2 = fieldEl.querySelector('.field-error');
-                if (e2) e2.remove();
-            }, { once: true });
-            valid = false;
-        }
+    // Clear all JS-added errors first
+    this.querySelectorAll('.is-invalid, .is-valid').forEach(el => {
+        el.classList.remove('is-invalid', 'is-valid');
     });
+    this.querySelectorAll('.field-error[data-js]').forEach(el => el.remove());
+
+    let valid = true;
+    const _mark = (input, msg) => { markInvalid(input, msg); valid = false; };
+
+    const pw = document.getElementById('password').value;
+    const confirm = document.getElementById('confirm_password');
+
+    // Required fields
+    ['username', 'email', 'password', 'confirm_password', 'first_name', 'last_name'].forEach(id => {
+        const input = document.getElementById(id);
+        if (!input.value.trim()) _mark(input, 'This field is required.');
+    });
+
+    // Email format
+    const emailInput = document.getElementById('email');
+    if (emailInput.value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailInput.value)) {
+        _mark(emailInput, 'Please enter a valid email address.');
+    }
+
+    // Password format
+    if (pw && !(pw.length >= 8 && /[A-Z]/.test(pw) && /[a-z]/.test(pw) && /\d/.test(pw))) {
+        _mark(document.getElementById('password'), 'Must be 8+ chars with uppercase, lowercase, and a number.');
+    }
+
+    // Confirm match
+    if (confirm.value && confirm.value !== pw) {
+        _mark(confirm, 'Passwords do not match.');
+    }
+
+    // Name rules
+    ['first_name', 'last_name'].forEach(id => {
+        const input = document.getElementById(id);
+        const val = input.value.trim();
+        if (!val) return;
+        if (val.length <= 2) _mark(input, 'Must be more than 2 characters.');
+        else if (/^\d/.test(val)) _mark(input, 'Must not start with a number.');
+    });
+
     if (!valid) e.preventDefault();
 });
 </script>
