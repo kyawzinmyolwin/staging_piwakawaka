@@ -1,0 +1,362 @@
+{% extends 'base.html' %}
+{% block title %}Reports | TiakiNet{% endblock %}
+
+{% block full_content %}
+
+<!-- ── Filter bar ──────────────────────────────────────────────── -->
+<div class="container py-3">
+    <form method="GET" class="row g-2 align-items-end">
+        <div class="col-auto">
+            <label class="form-label fw-semibold mb-1" style="font-size:.78rem;">FROM</label>
+            <input type="date" name="date_from" class="form-control form-control-sm" value="{{ date_from }}">
+        </div>
+        <div class="col-auto">
+            <label class="form-label fw-semibold mb-1" style="font-size:.78rem;">TO</label>
+            <input type="date" name="date_to" class="form-control form-control-sm" value="{{ date_to }}">
+        </div>
+        <div class="col-auto" style="min-width:160px;">
+            <label class="form-label fw-semibold mb-1" style="font-size:.78rem;">SPECIES</label>
+            <select name="species_id" class="form-select form-select-sm">
+                <option value="">All Species</option>
+                {% for s in all_species %}
+                <option value="{{ s.id }}" {% if selected_species == s.id|string %}selected{% endif %}>{{ s.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-auto d-flex gap-2">
+            <button type="submit" class="btn btn-primary btn-sm">Apply</button>
+            <a href="{{ url_for('reports') }}" class="btn btn-outline-secondary btn-sm">Reset</a>
+        </div>
+    </form>
+</div>
+
+{% if not has_data %}
+<!-- Empty state -->
+<div class="container py-5 text-center">
+    <i class="bi bi-bar-chart" style="font-size:4rem; color:#3d7a2e; opacity:.4;"></i>
+    <h4 class="mt-3 mb-1">No data yet</h4>
+    <p class="text-muted">Once trap catch records are added, your report will appear here.</p>
+</div>
+
+{% else %}
+
+<!-- ── Hero stats ──────────────────────────────────────────────── -->
+<div class="report-hero">
+    <div class="container">
+        <p class="report-eyebrow">PREDATOR FREE LINCOLN UNIVERSITY</p>
+        <h1 class="report-headline">Field Report</h1>
+        <div class="stats-grid">
+            <div class="stat-card">
+                <span class="stat-number" data-target="{{ total_strikes }}">0</span>
+                <span class="stat-label">Total Catches</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-number" data-target="{{ species_count }}">0</span>
+                <span class="stat-label">Species Found</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-number" data-target="{{ active_lines }}">0</span>
+                <span class="stat-label">Active Lines</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-number" data-target="{{ total_checks }}">0</span>
+                <span class="stat-label">Trap Checks</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container py-4">
+<div class="row g-4">
+
+    <!-- ── Top Species podium ──────────────────────────────────── -->
+    {% if species_rows %}
+    <div class="col-lg-5">
+        <div class="report-card h-100">
+            <div class="report-card-title">
+                <i class="bi bi-trophy me-2"></i>Top Species
+            </div>
+
+            {% if species_rows|length >= 3 %}
+            <div class="podium-wrap">
+                <div class="podium-item podium-2">
+                    <div class="podium-name">{{ species_rows[1].name }}</div>
+                    <div class="podium-count">{{ species_rows[1].total }}</div>
+                    <div class="podium-bar bar-silver">2</div>
+                </div>
+                <div class="podium-item podium-1">
+                    <div class="podium-name">{{ species_rows[0].name }}</div>
+                    <div class="podium-count">{{ species_rows[0].total }}</div>
+                    <div class="podium-bar bar-gold">1</div>
+                </div>
+                <div class="podium-item podium-3">
+                    <div class="podium-name">{{ species_rows[2].name }}</div>
+                    <div class="podium-count">{{ species_rows[2].total }}</div>
+                    <div class="podium-bar bar-bronze">3</div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Rest of list -->
+            {% if species_rows|length > 3 %}
+            <div class="rest-list mt-3">
+                {% for row in species_rows[3:] %}
+                <div class="rest-row">
+                    <span class="rest-rank">#{{ loop.index + 3 }}</span>
+                    <span class="rest-name">{{ row.name }}</span>
+                    <span class="rest-count">{{ row.total }}</span>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            {% if species_rows|length == 1 %}
+            <div class="text-center py-3">
+                <div class="podium-name fs-5 fw-bold">🥇 {{ species_rows[0].name }}</div>
+                <div class="stat-number" style="font-size:2.5rem;">{{ species_rows[0].total }}</div>
+                <div class="text-muted" style="font-size:.82rem;">catches</div>
+            </div>
+            {% elif species_rows|length == 2 %}
+            <div class="rest-list">
+                {% for row in species_rows %}
+                <div class="rest-row">
+                    <span class="rest-rank">#{{ loop.index }}</span>
+                    <span class="rest-name">{{ row.name }}</span>
+                    <span class="rest-count">{{ row.total }}</span>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- ── Line Rankings ───────────────────────────────────────── -->
+    {% if line_rankings %}
+    <div class="col-lg-7">
+        <div class="report-card h-100">
+            <div class="report-card-title">
+                <i class="bi bi-map me-2"></i>Line Rankings
+            </div>
+            <div class="rankings-list">
+                {% for line in line_rankings %}
+                <div class="ranking-row">
+                    <span class="ranking-num">#{{ loop.index }}</span>
+                    <div class="ranking-body">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="ranking-name">{{ line.name }}</span>
+                            <span class="ranking-count">{{ line.total }} catches</span>
+                        </div>
+                        <div class="ranking-track">
+                            <div class="ranking-fill {% if loop.index == 1 %}fill-gold{% elif loop.index == 2 %}fill-silver{% elif loop.index == 3 %}fill-bronze{% else %}fill-default{% endif %}"
+                                 style="width: 0%;" data-width="{{ line.pct }}%"></div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- ── Monthly Trend ───────────────────────────────────────── -->
+    {% if trend_chart %}
+    <div class="col-12">
+        <div class="report-card report-card-dark">
+            <div class="report-card-title" style="color:rgba(255,255,255,.7);">
+                <i class="bi bi-graph-up me-2"></i>Monthly Trend
+            </div>
+            <canvas id="trendChart" style="max-height:220px;"></canvas>
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+</div>
+{% endif %}
+
+<!-- ── Report styles ───────────────────────────────────────────── -->
+<style>
+.report-hero {
+    background: var(--color-deep-space);
+    padding: 3rem 0 2.5rem;
+    position: relative;
+    overflow: hidden;
+}
+.report-hero::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 60% 50%, rgba(45,106,53,0.25) 0%, transparent 65%);
+    pointer-events: none;
+}
+.report-eyebrow {
+    font-size: .68rem; font-weight: 700; letter-spacing: .15em;
+    color: var(--color-bulb); margin-bottom: .5rem;
+}
+.report-headline {
+    font-family: 'Raleway', sans-serif;
+    font-size: clamp(2rem, 5vw, 3rem);
+    font-weight: 800; color: #fff;
+    letter-spacing: -.02em; margin-bottom: 2rem;
+}
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 1rem;
+}
+.stat-card {
+    background: rgba(255,255,255,.06);
+    border: 1px solid rgba(255,255,255,.1);
+    border-radius: 14px;
+    padding: 1.25rem 1rem;
+    text-align: center;
+}
+.stat-number {
+    display: block;
+    font-family: 'Raleway', sans-serif;
+    font-size: 2.4rem; font-weight: 800;
+    color: #fff; line-height: 1;
+    margin-bottom: .35rem;
+}
+.stat-label {
+    font-size: .72rem; font-weight: 600;
+    text-transform: uppercase; letter-spacing: .08em;
+    color: rgba(255,255,255,.5);
+}
+
+/* Report cards */
+.report-card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 12px rgba(0,0,0,.06);
+}
+.report-card-dark {
+    background: var(--color-deep-space);
+}
+.report-card-title {
+    font-family: 'Raleway', sans-serif;
+    font-size: .72rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .1em;
+    color: var(--color-forest);
+    border-left: 3px solid var(--color-bulb);
+    padding-left: .6rem;
+    margin-bottom: 1.25rem;
+}
+.report-card-dark .report-card-title { color: rgba(255,255,255,.6); }
+
+/* Podium */
+.podium-wrap {
+    display: flex; align-items: flex-end;
+    justify-content: center; gap: .5rem;
+    padding: 0 .5rem;
+}
+.podium-item { text-align: center; flex: 1; }
+.podium-name { font-size: .78rem; font-weight: 600; color: var(--text); margin-bottom: .25rem; }
+.podium-count { font-size: 1.1rem; font-weight: 800; color: var(--color-forest); margin-bottom: .3rem; }
+.podium-bar {
+    border-radius: 8px 8px 0 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.1rem; font-weight: 800; color: #fff;
+}
+.bar-gold   { background: linear-gradient(180deg,#f7c948,#e8a800); height: 90px; }
+.bar-silver { background: linear-gradient(180deg,#c0c8d0,#8a9299); height: 65px; }
+.bar-bronze { background: linear-gradient(180deg,#d4935a,#a0622c); height: 50px; }
+
+/* Rest list */
+.rest-list { border-top: 1px solid var(--border); padding-top: .75rem; }
+.rest-row {
+    display: flex; align-items: center; gap: .75rem;
+    padding: .35rem 0;
+    font-size: .88rem;
+    border-bottom: 1px solid rgba(0,0,0,.04);
+}
+.rest-rank { font-weight: 700; color: var(--text-muted); min-width: 28px; font-size: .78rem; }
+.rest-name { flex: 1; color: var(--text); }
+.rest-count { font-weight: 700; color: var(--color-forest); }
+
+/* Rankings */
+.rankings-list { display: flex; flex-direction: column; gap: .9rem; }
+.ranking-row { display: flex; align-items: center; gap: .75rem; }
+.ranking-num { font-weight: 800; font-size: .82rem; color: var(--text-muted); min-width: 28px; }
+.ranking-body { flex: 1; }
+.ranking-name { font-size: .88rem; font-weight: 600; color: var(--text); }
+.ranking-count { font-size: .78rem; color: var(--text-muted); }
+.ranking-track {
+    height: 8px; background: rgba(0,0,0,.07);
+    border-radius: 4px; overflow: hidden;
+}
+.ranking-fill {
+    height: 100%; border-radius: 4px;
+    transition: width .8s cubic-bezier(.4,0,.2,1);
+}
+.fill-gold    { background: linear-gradient(90deg,#e8a800,#f7c948); }
+.fill-silver  { background: linear-gradient(90deg,#8a9299,#c0c8d0); }
+.fill-bronze  { background: linear-gradient(90deg,#a0622c,#d4935a); }
+.fill-default { background: linear-gradient(90deg,var(--color-forest-dk),var(--color-mid-green)); }
+</style>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+{% if has_data %}
+
+// ── Counter animation ────────────────────────────────────────────
+document.querySelectorAll('.stat-number[data-target]').forEach(el => {
+    const target = parseInt(el.dataset.target);
+    if (target === 0) { el.textContent = '0'; return; }
+    let start = 0;
+    const duration = 1200;
+    const step = Math.ceil(target / (duration / 16));
+    const timer = setInterval(() => {
+        start = Math.min(start + step, target);
+        el.textContent = start.toLocaleString();
+        if (start >= target) clearInterval(timer);
+    }, 16);
+});
+
+// ── Progress bar animation ───────────────────────────────────────
+window.addEventListener('load', () => {
+    document.querySelectorAll('.ranking-fill').forEach(el => {
+        const w = el.dataset.width;
+        setTimeout(() => el.style.width = w, 200);
+    });
+});
+
+// ── Monthly trend chart ──────────────────────────────────────────
+const trendData = {{ trend_chart | safe }};
+if (trendData.labels.length > 0) {
+    new Chart(document.getElementById('trendChart'), {
+        type: 'line',
+        data: {
+            labels: trendData.labels,
+            datasets: [{
+                label: 'Catches',
+                data: trendData.data,
+                borderColor: '#5A9A45',
+                backgroundColor: 'rgba(90,154,69,0.12)',
+                pointBackgroundColor: '#5A9A45',
+                pointRadius: 5,
+                tension: 0.35,
+                fill: true,
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: false },
+            },
+            scales: {
+                x: { ticks: { color: 'rgba(255,255,255,.5)' }, grid: { color: 'rgba(255,255,255,.06)' } },
+                y: { beginAtZero: true, ticks: { color: 'rgba(255,255,255,.5)', stepSize: 1 }, grid: { color: 'rgba(255,255,255,.06)' } }
+            }
+        }
+    });
+}
+
+{% endif %}
+</script>
+{% endblock %}

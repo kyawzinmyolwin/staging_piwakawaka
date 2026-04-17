@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git fetch:*)",
+      "Bash(git:*)",
+      "WebSearch",
+      "Bash(textutil -convert txt \"Design Project timing \\(13\\).docx\" -output /tmp/design_timing.txt)",
+      "Read(//tmp/**)",
+      "Bash(textutil:*)"
+    ]
+  }
+}

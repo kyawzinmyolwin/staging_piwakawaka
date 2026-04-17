@@ -9,7 +9,7 @@
     <div class="row g-3">
         <div class="col-md-6">
             <label for="date_checked" class="form-label">Date Checked</label>
-            <input type="datetime-local" class="form-control {{ 'is-invalid' if errors.get('date_checked') }}" id="date_checked" name="date_checked" value="{{ form_data.get('date_checked', '') }}" min="{{ min_date }}" max="{{ max_date }}" required>
+            <input type="datetime-local" class="form-control {{ 'is-invalid' if errors.get('date_checked') }}" id="date_checked" name="date_checked" value="{{ form_data.get('date_checked', '') }}" max="{{ max_date }}" required>
             <div class="invalid-feedback">{{ errors.get('date_checked') }}</div>
         </div>
 

@@ -17,3 +17,7 @@ from piwakawaka import profile
 from piwakawaka import lines
 from piwakawaka import catches
 from piwakawaka import admin
+from piwakawaka import observations
+from piwakawaka import species
+from piwakawaka import reports
+

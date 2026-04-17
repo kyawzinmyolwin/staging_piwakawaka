@@ -3,14 +3,14 @@
 /* ── Color tokens ──────────────────────────────────────────────── */
 :root {
     /* Primary greens */
-    --color-forest:     #2D6A35;
-    --color-forest-dk:  #285F2F;   /* forest darkened 10% — hover */
-    --color-mid-green:  #5A9A45;
-    --color-moss:       #8FBC5A;
-    --color-pale-lime:  #C8E080;
+    --color-forest:     #1a4d23;
+    --color-forest-dk:  #143d1b;   /* forest darkened — hover */
+    --color-mid-green:  #3d7a2e;
+    --color-moss:       #6fa34a;
+    --color-pale-lime:  #b8d464;
 
     /* Deep blues */
-    --color-deep-space: #0D1B2A;
+    --color-deep-space: #080f08;
     --color-night-blue: #1C3A5E;
     --color-teal-blue:  #3A6B8A;
     --color-teal-dk:    #2E5570;   /* teal darkened — hover */
@@ -63,8 +63,13 @@
 body {
     background: var(--white);
     color: var(--text);
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-family: 'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     min-height: 100vh;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: 'Raleway', -apple-system, sans-serif;
+    font-weight: 700;
 }
 
 a       { color: var(--color-teal-blue); }
@@ -133,13 +138,16 @@ a:hover { color: var(--color-teal-dk); }
 
 /* ── Navbar ────────────────────────────────────────────────────── */
 .navbar {
-    background: var(--color-forest) !important;
-    border-bottom: 1px solid rgba(0,0,0,0.12);
+    background: rgba(10, 28, 12, 0.82) !important;
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border-bottom: 1px solid rgba(255,255,255,0.07);
 }
 .navbar-brand {
     color: #fff !important;
-    font-weight: 700;
-    letter-spacing: -0.01em;
+    font-family: 'Raleway', sans-serif;
+    font-weight: 800;
+    letter-spacing: 0.02em;
 }
 .navbar .nav-link {
     color: rgba(255,255,255,0.80) !important;
@@ -342,6 +350,11 @@ footer {
     border: 1px solid var(--border) !important;
     border-radius: 16px !important;
     box-shadow: 0 2px 12px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 28px rgba(0,0,0,0.11), 0 2px 6px rgba(0,0,0,0.06);
 }
 .card-header {
     background: var(--color-pale-lime) !important;

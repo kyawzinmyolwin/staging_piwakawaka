@@ -1,0 +1,180 @@
+{% extends 'base.html' %}
+{% block title %}Manage Species | TiakiNet{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="mb-0">Species Management</h1>
+    <span class="role-badge role-badge-admin">Admin</span>
+</div>
+
+{# ── Add form ──────────────────────────────────────────────────────────────── #}
+<div class="card shadow-sm mb-4">
+    <div class="card-header">Add New Species</div>
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('manage_species') }}"
+              novalidate id="add-species-form">
+            <div class="row g-3 align-items-end">
+
+                <div class="col-md-8">
+                    <label for="name" class="form-label">Species Name</label>
+                    <input
+                        type="text"
+                        id="name"
+                        name="name"
+                        class="form-control {{ 'is-invalid' if errors.get('name') }}"
+                        maxlength="50"
+                        value="{{ form_data.get('name', '') }}"
+                        placeholder="e.g. Hedgehog"
+                        required
+                    >
+                    {% if errors.get('name') %}
+                        <div class="invalid-feedback d-block">{{ errors.name }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="col-md-4">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-plus-lg me-1"></i>Add Species
+                    </button>
+                </div>
+
+            </div>
+        </form>
+    </div>
+</div>
+
+{# ── Species list ──────────────────────────────────────────────────────────── #}
+<div class="card shadow-sm">
+    <div class="card-header">All Species</div>
+    <div class="card-body p-0">
+        {% if species_list %}
+            <div class="table-responsive">
+                <table class="table table-striped mb-0 align-middle">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th class="text-end" style="min-width:180px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for sp in species_list %}
+                        <tr>
+                            <td>{{ sp.name }}</td>
+                            <td class="text-end">
+
+                                {# Edit — opens modal #}
+                                <button
+                                    type="button"
+                                    class="btn btn-outline-primary btn-sm"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#editModal"
+                                    data-species-id="{{ sp.id }}"
+                                    data-species-name="{{ sp.name }}"
+                                >
+                                    <i class="bi bi-pencil me-1"></i>Edit
+                                </button>
+
+                                {# Delete #}
+                                <form
+                                    method="POST"
+                                    action="{{ url_for('delete_species', species_id=sp.id) }}"
+                                    class="d-inline"
+                                    onsubmit="return confirm('Delete species \'{{ sp.name }}\'? This cannot be undone.');"
+                                >
+                                    <button type="submit" class="btn btn-outline-danger btn-sm">
+                                        <i class="bi bi-trash me-1"></i>Delete
+                                    </button>
+                                </form>
+
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="p-3 text-muted">No species have been added yet.</div>
+        {% endif %}
+    </div>
+</div>
+
+{# ── Edit modal ────────────────────────────────────────────────────────────── #}
+<div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title" id="editModalLabel">
+                    <i class="bi bi-pencil me-2"></i>Edit Species
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <form method="POST" id="edit-species-form" novalidate>
+                <div class="modal-body">
+                    <label for="edit-name" class="form-label">
+                        Species Name <span class="text-danger">*</span>
+                    </label>
+                    <input
+                        type="text"
+                        class="form-control"
+                        id="edit-name"
+                        name="name"
+                        maxlength="50"
+                        required
+                    >
+                    <div class="invalid-feedback">Species name is required.</div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary"
+                            data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success">Save Changes</button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+// ── Populate edit modal when opened ─────────────────────────────────────────
+document.getElementById('editModal').addEventListener('show.bs.modal', function (event) {
+    const btn        = event.relatedTarget;
+    const speciesId  = btn.dataset.speciesId;
+    const speciesName = btn.dataset.speciesName;
+
+    const form      = document.getElementById('edit-species-form');
+    const nameInput = document.getElementById('edit-name');
+
+    form.action = `/admin/species/${speciesId}/edit`;
+    nameInput.value = speciesName;
+
+    // Reset any previous validation state
+    nameInput.classList.remove('is-invalid');
+    form.classList.remove('was-validated');
+});
+
+// ── Bootstrap client-side validation for add form ────────────────────────────
+document.getElementById('add-species-form').addEventListener('submit', function (e) {
+    if (!this.checkValidity()) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+    this.classList.add('was-validated');
+});
+
+// ── Bootstrap client-side validation for edit form (inside modal) ────────────
+document.getElementById('edit-species-form').addEventListener('submit', function (e) {
+    if (!this.checkValidity()) {
+        e.preventDefault();
+        e.stopPropagation();
+        document.getElementById('edit-name').classList.add('is-invalid');
+    }
+    this.classList.add('was-validated');
+});
+</script>
+{% endblock %}

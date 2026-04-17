@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls -lh \"/Users/sodawaitress/Desktop/学校/林肯大学/applied computing/COMP639 Project 1/\"*.docx)",
+      "Bash(unzip -p '/Users/sodawaitress/Desktop/学校/林肯大学/applied computing/COMP639 Project 1/Project 1 - Planning Report Template.docx' word/document.xml)",
+      "Bash(python3:*)",
+      "Bash(dot -V)",
+      "Bash(npx --yes @mermaid-js/mermaid-cli --version)",
+      "Bash(OUT='/Users/sodawaitress/Desktop/学校/林肯大学/applied computing/COMP639 Project 1/PF-LU_ERD_mermaid.png' npx @mermaid-js/mermaid-cli -i /tmp/pf_lu_erd.mmd -o \"$OUT\" -c /tmp/mermaid_config.json -w 2400 -H 3200 --backgroundColor white)",
+      "Bash(sed -i '' 's/splines=curved/splines=spline/' /tmp/pf_lu_erd.dot)",
+      "Bash(__NEW_LINE_978946e8b6dc7b13__ OUT='/Users/sodawaitress/Desktop/学校/林肯大学/applied computing/COMP639 Project 1/PF-LU_ERD_final.png')",
+      "Bash(dot -Tpng -Gdpi=200 /tmp/pf_lu_erd.dot -o \"$OUT\")",
+      "Bash(OUT='/Users/sodawaitress/Desktop/学校/林肯大学/applied computing/COMP639 Project 1/PF-LU_ERD_final.png')",
+      "Bash(echo \"exit: $?\")",
+      "Read(//Users/sodawaitress/Documents/GitHub/COMP639_Project_1_Piwakawaka/templates/**)",
+      "Bash(dot -Tpng -Gdpi=200 /tmp/pf_lu_erd_v2.dot -o /tmp/pf_lu_erd_v2.png)",
+      "Bash(__NEW_LINE_97d198755fc8792c__ dot:*)",
+      "WebSearch"
+    ]
+  }
+}

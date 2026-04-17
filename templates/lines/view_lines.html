@@ -22,7 +22,7 @@
                         All Lines
                     </a>
                 </li>
-                {% if session.get('role') != 'Observer' %}
+                {% if session.get('role') == 'Operator' %}
                 <li class="nav-item">
                     <a class="nav-link {% if active_tab == 'mine' %}active{% endif %}"
                        href="{{ url_for('view_lines', tab='mine') }}">
