@@ -8,11 +8,12 @@
 # US24 View Operator Activity (Admin)
 # US25 Activate/Deactivate Accounts (Admin)
 # US26 Change User Roles (Admin)
+import re
 from flask import render_template, request, redirect, url_for, flash, session
 from piwakawaka import app, db
 from piwakawaka.auth import login_required, role_required
 
-
+# --- US22 View User List ---
 
 @app.route('/admin/users')
 @login_required
@@ -601,3 +602,285 @@ def reassign_line_operator():
 
     flash('Line reassigned successfully.', 'success')
     return redirect(url_for('manage_line_assignments'))
+
+# --- US19 Manage Trap Status ---
+
+@app.route('/admin/trap-status')
+@login_required
+@role_required('Admin')
+def manage_trap_status():
+    cursor = db.get_cursor()
+    cursor.execute("SELECT id, name FROM trap_status ORDER BY name;")
+    statuses = cursor.fetchall()
+    cursor.close()
+    return render_template('admin/manage_trap_status.html', statuses=statuses)
+
+
+@app.route('/admin/trap-status/add', methods=['POST'])
+@login_required
+@role_required('Admin')
+def add_trap_status():
+    name = request.form.get('name', '').strip()
+    if not name:
+        flash('Status name is required.', 'danger')
+        return redirect(url_for('manage_trap_status'))
+
+    cursor = db.get_cursor()
+    cursor.execute("SELECT id FROM trap_status WHERE LOWER(name) = LOWER(%s);", (name,))
+    existing = cursor.fetchone()
+
+    if existing:
+        cursor.close()
+        flash('That status already exists.', 'danger')
+        return redirect(url_for('manage_trap_status'))
+
+    cursor.execute("INSERT INTO trap_status (name) VALUES (%s);", (name,))
+    db.get_db().commit()
+    cursor.close()
+    flash('Status added successfully.', 'success')
+    return redirect(url_for('manage_trap_status'))
+
+
+@app.route('/admin/trap-status/edit/<int:status_id>', methods=['POST'])
+@login_required
+@role_required('Admin')
+def edit_trap_status(status_id):
+    name = request.form.get('name', '').strip()
+    if not name:
+        flash('Status name is required.', 'danger')
+        return redirect(url_for('manage_trap_status'))
+
+    cursor = db.get_cursor()
+    cursor.execute("SELECT id FROM trap_status WHERE LOWER(name) = LOWER(%s) AND id != %s;", (name, status_id))
+    existing = cursor.fetchone()
+
+    if existing:
+        cursor.close()
+        flash('That status name already exists.', 'danger')
+        return redirect(url_for('manage_trap_status'))
+
+    cursor.execute("UPDATE trap_status SET name = %s WHERE id = %s;", (name, status_id))
+    db.get_db().commit()
+    cursor.close()
+    flash('Status updated successfully.', 'success')
+    return redirect(url_for('manage_trap_status'))
+
+
+@app.route('/admin/trap-status/delete/<int:status_id>', methods=['POST'])
+@login_required
+@role_required('Admin')
+def delete_trap_status(status_id):
+    cursor = db.get_cursor()
+    cursor.execute("SELECT COUNT(*) AS cnt FROM trap_catch WHERE status_id = %s;", (status_id,))
+    result = cursor.fetchone()
+
+    if result['cnt'] > 0:
+        cursor.close()
+        flash('Cannot delete: this status is linked to existing catch records.', 'danger')
+        return redirect(url_for('manage_trap_status'))
+
+    cursor.execute("DELETE FROM trap_status WHERE id = %s;", (status_id,))
+    db.get_db().commit()
+    cursor.close()
+    flash('Status deleted successfully.', 'success')
+    return redirect(url_for('manage_trap_status'))
+
+# --- US20 Manage Bait Types ---
+
+@app.route('/admin/bait-types')
+@login_required
+@role_required('Admin')
+def manage_bait_types():
+    cursor = db.get_cursor()
+    cursor.execute("SELECT id, name FROM bait_type ORDER BY name;")
+    bait_types = cursor.fetchall()
+    cursor.close()
+    return render_template('admin/manage_bait_types.html', bait_types=bait_types)
+
+
+@app.route('/admin/bait-types/add', methods=['POST'])
+@login_required
+@role_required('Admin')
+def add_bait_type():
+    name = request.form.get('name', '').strip()
+    if not name:
+        flash('Bait type name is required.', 'danger')
+        return redirect(url_for('manage_bait_types'))
+
+    cursor = db.get_cursor()
+    cursor.execute("SELECT id FROM bait_type WHERE LOWER(name) = LOWER(%s);", (name,))
+    existing = cursor.fetchone()
+
+    if existing:
+        cursor.close()
+        flash('That bait type already exists.', 'danger')
+        return redirect(url_for('manage_bait_types'))
+
+    cursor.execute("INSERT INTO bait_type (name) VALUES (%s);", (name,))
+    db.get_db().commit()
+    cursor.close()
+    flash('Bait type added successfully.', 'success')
+    return redirect(url_for('manage_bait_types'))
+
+
+@app.route('/admin/bait-types/edit/<int:bait_type_id>', methods=['POST'])
+@login_required
+@role_required('Admin')
+def edit_bait_type(bait_type_id):
+    name = request.form.get('name', '').strip()
+    if not name:
+        flash('Bait type name is required.', 'danger')
+        return redirect(url_for('manage_bait_types'))
+
+    cursor = db.get_cursor()
+    cursor.execute("SELECT id FROM bait_type WHERE LOWER(name) = LOWER(%s) AND id != %s;", (name, bait_type_id))
+    existing = cursor.fetchone()
+
+    if existing:
+        cursor.close()
+        flash('That bait type name already exists.', 'danger')
+        return redirect(url_for('manage_bait_types'))
+
+    cursor.execute("UPDATE bait_type SET name = %s WHERE id = %s;", (name, bait_type_id))
+    db.get_db().commit()
+    cursor.close()
+    flash('Bait type updated successfully.', 'success')
+    return redirect(url_for('manage_bait_types'))
+
+
+@app.route('/admin/bait-types/delete/<int:bait_type_id>', methods=['POST'])
+@login_required
+@role_required('Admin')
+def delete_bait_type(bait_type_id):
+    cursor = db.get_cursor()
+    cursor.execute("SELECT COUNT(*) AS cnt FROM trap_catch WHERE bait_type_id = %s;", (bait_type_id,))
+    result = cursor.fetchone()
+
+    if result['cnt'] > 0:
+        cursor.close()
+        flash('Cannot delete: this bait type is linked to existing catch records.', 'danger')
+        return redirect(url_for('manage_bait_types'))
+
+    cursor.execute("DELETE FROM bait_type WHERE id = %s;", (bait_type_id,))
+    db.get_db().commit()
+    cursor.close()
+    flash('Bait type deleted successfully.', 'success')
+    return redirect(url_for('manage_bait_types'))
+
+# --- US23 View User Profile ---
+
+@app.route('/admin/users/<int:user_id>')
+@login_required
+@role_required('Admin')
+def view_user_profile(user_id):
+    cursor = db.get_cursor()
+    cursor.execute("""
+        SELECT u.id, u.username, u.email, u.first_name, u.last_name,
+               u.phone, u.emergency_contact_name, u.emergency_contact_phone,
+               u.is_active, u.created_at, r.name AS role_name
+        FROM "user" u
+        JOIN role r ON u.role_id = r.id
+        WHERE u.id = %s;
+    """, (user_id,))
+    user = cursor.fetchone()
+    cursor.close()
+
+    if not user:
+        flash('User not found.', 'danger')
+        return redirect(url_for('manage_users'))
+
+    missing_fields = []
+    if not user.get('email'):
+        missing_fields.append('Email')
+    if not user.get('phone'):
+        missing_fields.append('Phone')
+    if not user.get('emergency_contact_name'):
+        missing_fields.append('Emergency contact name')
+    if not user.get('emergency_contact_phone'):
+        missing_fields.append('Emergency contact phone')
+
+    return render_template(
+        'admin/view_user_profile.html',
+        user=user,
+        missing_fields=missing_fields,
+        errors={}
+    )
+
+
+@app.route('/admin/users/<int:user_id>/edit', methods=['POST'])
+@login_required
+@role_required('Admin')
+def edit_user_profile(user_id):
+    email = request.form.get('email', '').strip()
+    phone = request.form.get('phone', '').strip()
+    emergency_contact_name = request.form.get('emergency_contact_name', '').strip()
+    emergency_contact_phone = request.form.get('emergency_contact_phone', '').strip()
+
+    cursor = db.get_cursor()
+    cursor.execute("""
+        SELECT u.id, u.username, u.email, u.first_name, u.last_name,
+               u.phone, u.emergency_contact_name, u.emergency_contact_phone,
+               u.is_active, u.created_at, r.name AS role_name
+        FROM "user" u
+        JOIN role r ON u.role_id = r.id
+        WHERE u.id = %s;
+    """, (user_id,))
+    user = cursor.fetchone()
+
+    if not user:
+        cursor.close()
+        flash('User not found.', 'danger')
+        return redirect(url_for('manage_users'))
+
+    errors = {}
+    if not email:
+        errors['email'] = 'Email is required.'
+    elif not re.match(r'^[^@\s]+@[^@\s]+\.[^@\s]+$', email):
+        errors['email'] = 'Please enter a valid email address.'
+
+    if phone and not re.match(r'^\+?[\d\s\-\(\)]{7,20}$', phone):
+        errors['phone'] = 'Please enter a valid phone number (e.g. 021 123 4567 or +64 21 123 4567).'
+
+    if emergency_contact_phone and not re.match(r'^\+?[\d\s\-\(\)]{7,20}$', emergency_contact_phone):
+        errors['emergency_contact_phone'] = 'Please enter a valid emergency contact phone number.'
+
+    if email and email != user['email']:
+        cursor.execute('SELECT id FROM "user" WHERE email = %s AND id != %s;', (email, user_id))
+        if cursor.fetchone():
+            errors['email'] = 'An account with this email already exists.'
+
+    if errors:
+        user['email'] = email
+        user['phone'] = phone
+        user['emergency_contact_name'] = emergency_contact_name
+        user['emergency_contact_phone'] = emergency_contact_phone
+
+        missing_fields = []
+        if not user.get('email'):
+            missing_fields.append('Email')
+        if not user.get('phone'):
+            missing_fields.append('Phone')
+        if not user.get('emergency_contact_name'):
+            missing_fields.append('Emergency contact name')
+        if not user.get('emergency_contact_phone'):
+            missing_fields.append('Emergency contact phone')
+
+        cursor.close()
+        return render_template(
+            'admin/view_user_profile.html',
+            user=user,
+            missing_fields=missing_fields,
+            errors=errors
+        )
+
+    cursor.execute("""
+        UPDATE "user"
+        SET email = %s, phone = %s,
+            emergency_contact_name = %s, emergency_contact_phone = %s
+        WHERE id = %s;
+    """, (email, phone or None, emergency_contact_name or None,
+          emergency_contact_phone or None, user_id))
+    db.get_db().commit()
+    cursor.close()
+    flash('User profile updated successfully.', 'success')
+    return redirect(url_for('view_user_profile', user_id=user_id))

@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+
+{% block title %}Incidental Observations | TiakiNet{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="mb-0">Observations</h1>
+        <span class="badge bg-success">{{ session.get('role') }}</span>
+    </div>
+
+    {%if active_tab == 'mine' %}
+        {% set observations = my_observations %}
+    {% else %}
+        {% set observations = all_observations %}
+    {% endif %}
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="text-success mb-0">
+            <i class="bi bi-binoculars me-2"></i>Incidental Observations
+        </h2>
+    </div>
+
+    <div class="card shadow-sm">
+
+        <div class="card-header p-0 border-bottom-0">
+            <ul class="nav nav-tabs card-header-tabs px-3 pt-1">
+                <li class="nav-item">
+                    <a class="nav-link {% if active_tab == 'all' %}active{% endif %}"
+                       href="{{ url_for('view_observations', tab='all') }}">
+                        All Observations
+                    </a>
+                </li>
+                {% if session.get('role') != 'Observer' %}
+                <li class="nav-item">
+                    <a class="nav-link {% if active_tab == 'mine' %}active{% endif %}"
+                       href="{{ url_for('view_observations', tab='mine') }}">
+                        My Observations
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </div>
+
+        <div class="card-body p-0">
+            {% if observations %}
+                <p class="text-muted small px-3 pt-3 mb-0">
+                    {{ observations|length }} observation{{ 's' if observations|length != 1 }} recorded
+                </p>
+                <div class="table-responsive">
+                    <table class="table table-striped mb-0">
+                        <thead>
+                            <tr>
+                                <th>Date &amp; Time</th>
+                                <th>Line</th>
+                                <th>Type</th>
+                                <th>Description</th>
+                                <th>Recorded By</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for obs in observations %}
+                            <tr>
+                                <td class="text-nowrap">
+                                    {{ obs.obs_date.strftime('%Y-%m-%d %H:%M') }}
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('view_line_traps', line_id=obs.line_id) }}"
+                                    class="text-decoration-none">
+                                        {{ obs.line_name }}
+                                    </a>
+                                </td>
+                                <td>
+                                    <span class="badge
+                                        {% if 'Bird' in obs.obs_type %}bg-success
+                                        {% elif 'Predator' in obs.obs_type %}bg-danger
+                                        {% elif 'Native' in obs.obs_type %}bg-primary
+                                        {% else %}bg-secondary
+                                        {% endif %}">
+                                        {{ obs.obs_type }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if obs.description %}
+                                        {{ obs.description[:120] }}{% if obs.description|length > 120 %}…{% endif %}
+                                    {% else %}
+                                        <span class="text-muted">—</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ obs.operator_first_name }} {{ obs.operator_last_name }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    {% if active_tab == 'mine' %}
+                        {% set message = "You haven't recorded any observations yet." %}
+                    {% else %}
+                        {% set message = "No observations recorded yet." %}
+                    {% endif %}
+                    <div class="mb-3" style="font-size:3rem; color: var(--color-mid-green); opacity:0.4;">
+                        <i class="bi bi-binoculars"></i>
+                    </div>
+                    <p class="text-muted mb-1 fw-semibold">{{ message }}</p>
+                    <p class="text-muted small mb-0">
+                        Operators can submit observations from the Line Detail page.
+                    </p>
+                </div>
+            {% endif %}
+        </div>
+
+    </div>
+</div>
+{% endblock %}

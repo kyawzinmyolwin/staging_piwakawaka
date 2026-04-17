@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>User Profile</h2>
+        <a href="{{ url_for('manage_users') }}" class="btn btn-secondary">← Back to Users</a>
+    </div>
+
+    {% if missing_fields %}
+        <div class="alert alert-warning" role="alert">
+            <div class="fw-semibold mb-1">This profile is incomplete.</div>
+            <div class="mb-2">
+                Missing fields:
+                {% for field in missing_fields %}
+                    <span class="badge text-bg-warning border">{{ field }}</span>
+                {% endfor %}
+            </div>
+            <a href="#contact-info-form" class="btn btn-sm btn-outline-warning">Update Missing Details</a>
+        </div>
+    {% endif %}
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <!-- User Info Card -->
+    <div class="card mb-4">
+        <div class="card-header">Account Information</div>
+        <div class="card-body">
+            <dl class="row">
+                <dt class="col-sm-3">Username</dt>
+                <dd class="col-sm-9">{{ user.username }}</dd>
+
+                <dt class="col-sm-3">Full Name</dt>
+                <dd class="col-sm-9">
+                    {% if user.first_name or user.last_name %}
+                        {{ user.first_name }} {{ user.last_name }}
+                    {% else %}
+                        <span class="text-danger">Missing</span>
+                    {% endif %}
+                </dd>
+
+                <dt class="col-sm-3">Role</dt>
+                <dd class="col-sm-9">
+                    <span class="badge bg-info text-dark">{{ user.role_name }}</span>
+                </dd>
+
+                <dt class="col-sm-3">Status</dt>
+                <dd class="col-sm-9">
+                    {% if user.is_active %}
+                        <span class="badge bg-success">Active</span>
+                    {% else %}
+                        <span class="badge bg-secondary">Inactive</span>
+                    {% endif %}
+                </dd>
+
+                <dt class="col-sm-3">Joined</dt>
+                <dd class="col-sm-9">{{ user.created_at.strftime('%d %B %Y') if user.created_at else 'N/A' }}</dd>
+            </dl>
+        </div>
+    </div>
+
+    <!-- Edit Contact Info -->
+    <div class="card">
+        <div class="card-header">Contact Information</div>
+        <div class="card-body">
+            <form id="contact-info-form" method="POST" action="{{ url_for('edit_user_profile', user_id=user.id) }}" novalidate>
+                <div class="mb-3">
+                    <label class="form-label">Email *</label>
+                    <input type="email" name="email" class="form-control"
+                           value="{{ user.email or '' }}" required>
+                    {% if errors and errors.get('email') %}
+                        <div class="text-danger small mt-1">{{ errors.get('email') }}</div>
+                    {% endif %}
+                    {% if not user.email %}
+                        <div class="text-danger small">This field is missing.</div>
+                    {% endif %}
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Phone</label>
+                    <input type="text" name="phone" class="form-control"
+                           value="{{ user.phone or '' }}">
+                    {% if errors and errors.get('phone') %}
+                        <div class="text-danger small mt-1">{{ errors.get('phone') }}</div>
+                    {% endif %}
+                    {% if not user.phone %}
+                        <div class="text-warning small">This field is missing.</div>
+                    {% endif %}
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Emergency Contact Name</label>
+                    <input type="text" name="emergency_contact_name" class="form-control"
+                           value="{{ user.emergency_contact_name or '' }}">
+                    {% if not user.emergency_contact_name %}
+                        <div class="text-warning small">This field is missing.</div>
+                    {% endif %}
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Emergency Contact Phone</label>
+                    <input type="text" name="emergency_contact_phone" class="form-control"
+                           value="{{ user.emergency_contact_phone or '' }}">
+                    {% if errors and errors.get('emergency_contact_phone') %}
+                        <div class="text-danger small mt-1">{{ errors.get('emergency_contact_phone') }}</div>
+                    {% endif %}
+                    {% if not user.emergency_contact_phone %}
+                        <div class="text-warning small">This field is missing.</div>
+                    {% endif %}
+                </div>
+
+                <button type="submit" class="btn btn-primary">Save Changes</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

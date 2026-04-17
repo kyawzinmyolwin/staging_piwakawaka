@@ -1,0 +1,157 @@
+{% extends 'base.html' %}
+
+{% block title %}Add Observation | TiakiNet{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="text-success mb-1">
+            <i class="bi bi-binoculars me-2"></i>Record Incidental Observation
+        </h2>
+        <p class="text-muted mb-0">
+            Line: <strong>{{ line.name }}</strong>
+        </p>
+    </div>
+    <a href="{{ url_for('view_line_traps', line_id=line.id) }}" class="btn btn-outline-secondary">
+        Back to Line
+    </a>
+</div>
+
+<form method="post" novalidate id="add-obs-form">
+    <div class="row g-3">
+
+        <!-- Date & Time -->
+        <div class="col-md-6">
+            <label for="obs_date" class="form-label">
+                Date &amp; Time <span class="text-danger">*</span>
+            </label>
+            <input
+                type="datetime-local"
+                class="form-control {{ 'is-invalid' if errors.get('obs_date') }}"
+                id="obs_date"
+                name="obs_date"
+                value="{{ form_data.get('obs_date', '') }}"
+                max="{{ max_date }}"
+                required
+            >
+            <div class="invalid-feedback">{{ errors.get('obs_date', 'Please enter a valid date and time.') }}</div>
+        </div>
+
+        <!-- Observation Type -->
+        <div class="col-md-6">
+            <label for="obs_type" class="form-label">
+                Observation Type <span class="text-danger">*</span>
+            </label>
+            <select
+                class="form-select {{ 'is-invalid' if errors.get('obs_type') }}"
+                id="obs_type"
+                name="obs_type"
+                required
+            >
+                <option value="">Select observation type</option>
+                {% for ot in obs_types %}
+                <option value="{{ ot }}" {% if form_data.get('obs_type') == ot %}selected{% endif %}>
+                    {{ ot }}
+                </option>
+                {% endfor %}
+            </select>
+            <div class="invalid-feedback">{{ errors.get('obs_type', 'Please select an observation type.') }}</div>
+        </div>
+
+        <!-- Description / Notes -->
+        <div class="col-12">
+            <label for="description" class="form-label">
+                Description / Notes
+                <span class="text-muted small">(optional)</span>
+            </label>
+            <textarea
+                class="form-control {{ 'is-invalid' if errors.get('description') }}"
+                id="description"
+                name="description"
+                rows="4"
+                maxlength="1000"
+                placeholder="Describe what you observed, where exactly it occurred, any relevant context…"
+            >{{ form_data.get('description', '') }}</textarea>
+            <div class="d-flex justify-content-between">
+                <div class="invalid-feedback d-block">{{ errors.get('description', '') }}</div>
+                <small class="text-muted ms-auto" id="desc-count">0 / 1000</small>
+            </div>
+        </div>
+
+        <!-- Optional GPS coordinates -->
+        <div class="col-12">
+            <p class="form-label mb-1">
+                GPS Coordinates
+                <span class="text-muted small">(optional — fill in if you have a precise location)</span>
+            </p>
+        </div>
+
+        <div class="col-md-6">
+            <label for="latitude" class="form-label">Latitude</label>
+            <input
+                type="text"
+                class="form-control {{ 'is-invalid' if errors.get('latitude') }}"
+                id="latitude"
+                name="latitude"
+                value="{{ form_data.get('latitude', '') }}"
+                placeholder="e.g. -43.6450"
+            >
+            <div class="invalid-feedback">{{ errors.get('latitude', '') }}</div>
+        </div>
+
+        <div class="col-md-6">
+            <label for="longitude" class="form-label">Longitude</label>
+            <input
+                type="text"
+                class="form-control {{ 'is-invalid' if errors.get('longitude') }}"
+                id="longitude"
+                name="longitude"
+                value="{{ form_data.get('longitude', '') }}"
+                placeholder="e.g. 172.4700"
+            >
+            <div class="invalid-feedback">{{ errors.get('longitude', '') }}</div>
+        </div>
+
+        <!-- Submit -->
+        <div class="col-12 d-flex gap-2 mt-3">
+            <button type="submit" class="btn btn-success">
+                <i class="bi bi-check-lg me-1"></i>Save Observation
+            </button>
+            <a href="{{ url_for('view_line_traps', line_id=line.id) }}"
+               class="btn btn-outline-secondary">Cancel</a>
+        </div>
+
+    </div>
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+    // ── Bootstrap validation ─────────────────────────────────────────
+    const form = document.getElementById('add-obs-form');
+    form.addEventListener('submit', function (e) {
+        if (!this.checkValidity()) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        this.classList.add('was-validated');
+    });
+
+    // ── Character counter for description ───────────────────────────
+    const descTextarea = document.getElementById('description');
+    const descCount    = document.getElementById('desc-count');
+
+    function updateCount() {
+        const len = descTextarea.value.length;
+        descCount.textContent = len + ' / 1000';
+        descCount.style.color = len > 950 ? '#c0392b' : '';
+    }
+
+    descTextarea.addEventListener('input', updateCount);
+    updateCount(); // initialise on page load
+
+});
+</script>
+{% endblock %}

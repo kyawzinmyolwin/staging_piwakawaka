@@ -1,0 +1,234 @@
+{% extends 'base.html' %}
+{% block title %}My Profile | TiakiNet{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-4">
+    <h2 class="mb-0"><i class="bi bi-person-circle me-2"></i>My Profile</h2>
+    <span class="role-badge role-badge-{{ user.role|lower }} fs-6">{{ user.role }}</span>
+</div>
+
+<div class="row g-4">
+
+    <!-- ── Read-only info ──────────────────────────── -->
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <i class="bi bi-info-circle me-1"></i>Account Info
+            </div>
+            <div class="card-body">
+                <dl class="mb-0" style="display:grid; grid-template-columns: auto 1fr; gap: 0.5rem 1rem; font-size:0.9rem;">
+                    <dt class="text-muted fw-normal">Username</dt>
+                    <dd class="mb-0 fw-semibold">{{ user.username }}</dd>
+
+                    <dt class="text-muted fw-normal">Role</dt>
+                    <dd class="mb-0">
+                        <span class="role-badge role-badge-{{ user.role|lower }}">{{ user.role }}</span>
+                    </dd>
+
+                    <dt class="text-muted fw-normal">Status</dt>
+                    <dd class="mb-0">
+                        {% if user.is_active %}
+                        <span class="badge bg-success">Active</span>
+                        {% else %}
+                        <span class="badge bg-secondary">Inactive</span>
+                        {% endif %}
+                    </dd>
+
+                    <dt class="text-muted fw-normal">Member since</dt>
+                    <dd class="mb-0">{{ user.created_at.strftime('%d %b %Y') }}</dd>
+                </dl>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Edit form ───────────────────────────────── -->
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-pencil me-1"></i>Edit Profile
+            </div>
+            <div class="card-body">
+                <form method="POST" novalidate id="profile-form">
+
+                    <div class="form-section-label">Personal Details</div>
+                    <div class="row g-3">
+
+                        <div class="col-md-6">
+                            <div class="form-field">
+                                <label for="first_name">First Name <span class="text-danger">*</span></label>
+                                <input type="text" id="first_name" name="first_name"
+                                       value="{{ form_data.first_name or '' }}"
+                                       class="{{ 'is-invalid' if errors.first_name }}"
+                                       maxlength="50" autocomplete="given-name">
+                                {% if errors.first_name %}
+                                <span class="field-error"><i class="bi bi-x-circle me-1"></i>{{ errors.first_name }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="form-field">
+                                <label for="last_name">Last Name <span class="text-danger">*</span></label>
+                                <input type="text" id="last_name" name="last_name"
+                                       value="{{ form_data.last_name or '' }}"
+                                       class="{{ 'is-invalid' if errors.last_name }}"
+                                       maxlength="50" autocomplete="family-name">
+                                {% if errors.last_name %}
+                                <span class="field-error"><i class="bi bi-x-circle me-1"></i>{{ errors.last_name }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="form-field">
+                                <label for="email">Email Address <span class="text-danger">*</span></label>
+                                <input type="email" id="email" name="email"
+                                       value="{{ form_data.email or '' }}"
+                                       class="{{ 'is-invalid' if errors.email }}"
+                                       maxlength="100" autocomplete="email">
+                                {% if errors.email %}
+                                <span class="field-error"><i class="bi bi-x-circle me-1"></i>{{ errors.email }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="form-field">
+                                <label for="phone">Phone <span class="field-optional">(optional)</span></label>
+                                <input type="text" id="phone" name="phone"
+                                       value="{{ form_data.phone or '' }}"
+                                       class="{{ 'is-invalid' if errors.phone }}"
+                                       placeholder="+64 21 000 0000" maxlength="20" autocomplete="tel">
+                                {% if errors.phone %}
+                                <span class="field-error"><i class="bi bi-x-circle me-1"></i>{{ errors.phone }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="form-section-label mt-3">Emergency Contact <span class="field-optional">(optional)</span></div>
+                    <div class="row g-3">
+
+                        <div class="col-md-6">
+                            <div class="form-field">
+                                <label for="emergency_contact_name">Contact Name</label>
+                                <input type="text" id="emergency_contact_name" name="emergency_contact_name"
+                                       value="{{ form_data.emergency_contact_name or '' }}"
+                                       maxlength="100">
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="form-field">
+                                <label for="emergency_contact_phone">Contact Phone</label>
+                                <input type="text" id="emergency_contact_phone" name="emergency_contact_phone"
+                                       value="{{ form_data.emergency_contact_phone or '' }}"
+                                       class="{{ 'is-invalid' if errors.emergency_contact_phone }}"
+                                       maxlength="20">
+                                {% if errors.emergency_contact_phone %}
+                                <span class="field-error"><i class="bi bi-x-circle me-1"></i>{{ errors.emergency_contact_phone }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="d-flex gap-2 mt-4">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-lg me-1"></i>Save Changes
+                        </button>
+                        <a href="{{ url_for('change_password') }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-key me-1"></i>Change Password
+                        </a>
+                        <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// ── Shared markInvalid ──────────────────────────────────────────────
+function markInvalid(input, message) {
+    input.classList.add('is-invalid');
+    const fieldEl = input.closest('.form-field');
+    if (!fieldEl.querySelector('.field-error[data-js]')) {
+        const err = document.createElement('span');
+        err.className = 'field-error';
+        err.setAttribute('data-js', '1');
+        err.innerHTML = '<i class="bi bi-x-circle me-1"></i>' + message;
+        fieldEl.appendChild(err);
+    }
+}
+
+// ── Clear errors on input ───────────────────────────────────────────
+['first_name', 'last_name', 'email', 'phone', 'emergency_contact_phone'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener('input', function () {
+        this.classList.remove('is-invalid', 'is-valid');
+        this.closest('.form-field').querySelectorAll('.field-error[data-js]').forEach(e => e.remove());
+    });
+});
+
+// ── Email blur validation ───────────────────────────────────────────
+document.getElementById('email').addEventListener('blur', function () {
+    const val = this.value.trim();
+    if (!val) return;
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) {
+        markInvalid(this, 'Please enter a valid email address.');
+    } else {
+        this.classList.add('is-valid');
+    }
+});
+
+// ── Name blur validation ────────────────────────────────────────────
+['first_name', 'last_name'].forEach(id => {
+    document.getElementById(id).addEventListener('blur', function () {
+        if (!this.classList.contains('is-invalid') && this.value.trim()) {
+            this.classList.add('is-valid');
+        }
+    });
+});
+
+// ── Submit: validate all fields at once ────────────────────────────
+document.getElementById('profile-form').addEventListener('submit', function (e) {
+    this.querySelectorAll('.is-invalid, .is-valid').forEach(el => el.classList.remove('is-invalid', 'is-valid'));
+    this.querySelectorAll('.field-error[data-js]').forEach(el => el.remove());
+
+    let valid = true;
+    const _mark = (input, msg) => { markInvalid(input, msg); valid = false; };
+
+    const firstName = document.getElementById('first_name');
+    const lastName  = document.getElementById('last_name');
+    const email     = document.getElementById('email');
+
+    // Required
+    if (!firstName.value.trim()) _mark(firstName, 'First name is required.');
+    if (!lastName.value.trim())  _mark(lastName, 'Last name is required.');
+    if (!email.value.trim())     _mark(email, 'Email is required.');
+
+    // Name rules
+    [firstName, lastName].forEach(input => {
+        const val = input.value.trim();
+        if (!val) return;
+        if (val.length <= 2)   _mark(input, 'Must be more than 2 characters.');
+        else if (/^\d/.test(val)) _mark(input, 'Must not start with a number.');
+    });
+
+    // Email format
+    if (email.value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value)) {
+        _mark(email, 'Please enter a valid email address.');
+    }
+
+    if (!valid) e.preventDefault();
+});
+</script>
+{% endblock %}

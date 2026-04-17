@@ -33,7 +33,7 @@
                 <i class="bi bi-bar-chart-line text-success" style="font-size: 2rem;"></i>
                 <h5 class="card-title mt-2">Reports</h5>
                 <p class="card-text text-muted">View graphical summaries and statistics.</p>
-                <a href="#" class="btn btn-outline-success btn-sm">View</a>
+                <a href="{{ url_for('reports') }}" class="btn btn-outline-success btn-sm">View</a>
             </div>
         </div>
     </div>
@@ -70,6 +70,17 @@
                 <h5 class="card-title mt-2">Manage Users</h5>
                 <p class="card-text text-muted">View, activate/deactivate, and change user roles.</p>
                 <a href="{{ url_for('manage_users') }}" class="btn btn-outline-danger btn-sm">Manage</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card border-danger h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-tags text-danger" style="font-size: 2rem;"></i>
+                <h5 class="card-title mt-2">Species</h5>
+                <p class="card-text text-muted">Add, edit, or remove species types.</p>
+                <a href="{{ url_for('manage_species') }}" class="btn btn-outline-danger btn-sm">Manage</a>
             </div>
         </div>
     </div>
